@@ -41,15 +41,6 @@ export const competitionSubmissionSchema = z.object({
   repoUrl: z.string().url().optional(),
 });
 
-export const orderSchema = z.object({
-  items: z.array(z.object({
-    productId: z.string(),
-    quantity: z.number().int().min(1),
-  })).min(1, 'At least one item is required'),
-  address: z.string().min(5, 'Address is required'),
-  phone: z.string().min(10, 'Phone number is required'),
-});
-
 export const profileSchema = z.object({
   firstName: z.string().min(2).optional(),
   lastName: z.string().min(2).optional(),
@@ -87,7 +78,6 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type CourseInput = z.infer<typeof courseSchema>;
 export type CodeProjectInput = z.infer<typeof codeProjectSchema>;
 export type ForumPostInput = z.infer<typeof forumPostSchema>;
-export type OrderInput = z.infer<typeof orderSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
 export type BlogPostInput = z.infer<typeof blogPostSchema>;
 export type BlogCommentInput = z.infer<typeof blogCommentSchema>;

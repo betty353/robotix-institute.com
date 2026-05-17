@@ -145,135 +145,6 @@ async function main() {
     console.log(`  ✓ Course: ${course.title}`);
   }
 
-  // ─── Create Products ──────────────────────────────────────
-  console.log('\nCreating products...');
-  
-  const products = [
-    {
-      name: 'Arduino Starter Kit',
-      slug: 'arduino-starter-kit',
-      description: 'Complete Arduino Uno starter kit with sensors, LEDs, motors, and components.',
-      price: 599,
-      salePrice: 499,
-      category: 'Kits',
-      stock: 50,
-      featured: true,
-      specs: JSON.stringify({
-        'Board': 'Arduino Uno R3',
-        'Components': '65+ pieces',
-        'Projects': '15+ guided projects',
-      }),
-    },
-    {
-      name: 'ESP32 DevKit V1',
-      slug: 'esp32-devkit',
-      description: 'ESP32 development board with WiFi and Bluetooth. Perfect for IoT projects.',
-      price: 149,
-      category: 'Boards',
-      stock: 100,
-      featured: true,
-      specs: JSON.stringify({
-        'CPU': 'Dual-core 240MHz',
-        'Memory': '520KB SRAM',
-        'WiFi': '802.11 b/g/n',
-        'Bluetooth': 'BLE 4.2',
-      }),
-    },
-    {
-      name: 'Ultrasonic Sensor HC-SR04',
-      slug: 'ultrasonic-hc-sr04',
-      description: 'Ultrasonic distance sensor for obstacle detection. Range: 2cm - 400cm.',
-      price: 29,
-      category: 'Sensors',
-      stock: 200,
-      specs: JSON.stringify({
-        'Range': '2cm - 400cm',
-        'Accuracy': '3mm',
-        'Trigger': '10μs pulse',
-      }),
-    },
-    {
-      name: 'Robot Car Chassis Kit',
-      slug: 'robot-car-chassis',
-      description: '4WD robot car chassis with motors, wheels, and battery holder.',
-      price: 199,
-      salePrice: 149,
-      category: 'Kits',
-      stock: 30,
-      specs: JSON.stringify({
-        'Motors': '4x DC gear motors',
-        'Wheels': '4x 65mm wheels',
-        'Material': 'Acrylic chassis',
-      }),
-    },
-    {
-      name: 'Servo Motor SG90',
-      slug: 'servo-sg90',
-      description: 'Micro servo motor for precise angular control. 0-180 degrees.',
-      price: 39,
-      category: 'Components',
-      stock: 150,
-      specs: JSON.stringify({
-        'Torque': '1.8kg/cm',
-        'Speed': '0.1s/60°',
-        'Rotation': '180°',
-      }),
-    },
-    {
-      name: 'Raspberry Pi 4 Model B',
-      slug: 'raspberry-pi-4',
-      description: 'Raspberry Pi 4 with 4GB RAM. The ultimate single-board computer for robotics.',
-      price: 899,
-      category: 'Boards',
-      stock: 25,
-      featured: true,
-      specs: JSON.stringify({
-        'CPU': 'Quad-core Cortex-A72',
-        'RAM': '4GB LPDDR4',
-        'USB': '2x USB 3.0, 2x USB 2.0',
-        'Display': 'Dual micro-HDMI',
-      }),
-    },
-    {
-      name: 'Mini FPV Drone Kit',
-      slug: 'mini-fpv-drone',
-      description: 'Build your own FPV racing drone. Includes frame, motors, and flight controller.',
-      price: 1299,
-      salePrice: 999,
-      category: 'Drones',
-      stock: 15,
-      featured: true,
-      specs: JSON.stringify({
-        'Frame': '5" carbon fiber',
-        'Motors': '2306 2400KV',
-        'FC': 'F4 with OSD',
-        'Camera': '1200TVL FPV',
-      }),
-    },
-    {
-      name: 'L298N Motor Driver',
-      slug: 'l298n-motor-driver',
-      description: 'Dual H-bridge motor driver module for DC motors and stepper motors.',
-      price: 49,
-      category: 'Components',
-      stock: 100,
-      specs: JSON.stringify({
-        'Channels': '2 DC motors or 1 stepper',
-        'Voltage': '5V-35V',
-        'Current': '2A per channel',
-      }),
-    },
-  ];
-
-  for (const productData of products) {
-    const product = await prisma.product.upsert({
-      where: { slug: productData.slug },
-      update: {},
-      create: productData,
-    });
-    console.log(`  ✓ Product: ${product.name}`);
-  }
-
   // ─── Create Games ─────────────────────────────────────────
   console.log('\nCreating games...');
   
@@ -401,7 +272,7 @@ async function main() {
     { id: 'projects', name: 'Project Showcase', slug: 'project-showcase', description: 'Share your robotics projects' },
     { id: 'tutorials', name: 'Tutorials', slug: 'tutorials', description: 'Community tutorials and guides' },
     { id: 'competitions', name: 'Competitions', slug: 'competitions', description: 'Competition discussion' },
-    { id: 'buy-sell', name: 'Buy & Sell', slug: 'buy-sell', description: 'Marketplace for components' },
+    { id: 'buy-sell', name: 'Buy & Sell', slug: 'buy-sell', description: 'Community exchange for robotics components' },
   ];
 
   for (const catData of forumCategories) {

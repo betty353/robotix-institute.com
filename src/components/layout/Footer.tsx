@@ -29,7 +29,6 @@ const footerSections = [
     title: 'Community',
     links: [
       { label: 'Forums', href: '/community' },
-      { label: 'Marketplace', href: '/marketplace' },
       { label: 'Events', href: '/events' },
       { label: 'Mentorship', href: '/mentorship' },
       { label: 'Partnerships', href: '/partners' },

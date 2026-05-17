@@ -34,7 +34,6 @@ export default function PrivacyPage() {
             <li><strong>Profile data</strong> — bio, avatar, GitHub/LinkedIn links you choose to share.</li>
             <li><strong>Learning data</strong> — courses enrolled, progress, quiz answers, certificates.</li>
             <li><strong>Project data</strong> — code projects, robotics projects, portfolio items.</li>
-            <li><strong>Order data</strong> — phone, delivery address, items purchased (only if you order).</li>
             <li><strong>Technical data</strong> — IP, device type, browser, anonymous analytics.</li>
           </ul>
 
@@ -42,7 +41,6 @@ export default function PrivacyPage() {
           <ul>
             <li>To provide the platform and your account.</li>
             <li>To grade work and issue certificates.</li>
-            <li>To deliver hardware orders (only with your consent).</li>
             <li>To improve safety, performance, and content.</li>
             <li>To send service emails (resets, notifications) — never marketing without consent.</li>
           </ul>

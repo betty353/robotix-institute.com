@@ -8,10 +8,10 @@ import Footer from '@/components/layout/Footer';
 import AdminGameLabQueue from '@/components/admin/AdminGameLabQueue';
 import { Section, GlassCard, Badge, Button, Input, ProgressBar } from '@/components/ui';
 import {
-  LayoutDashboard, Users, BookOpen, ShoppingCart, Trophy, Cpu,
+  LayoutDashboard, Users, BookOpen, Trophy, Cpu,
   TrendingUp, TrendingDown, DollarSign, BarChart3, Activity,
   Settings, Bell, Search, ChevronRight, MoreVertical,
-  UserPlus, GraduationCap, Package, MessageSquare, Eye, AlertTriangle
+  UserPlus, GraduationCap, MessageSquare, Eye, AlertTriangle
 } from 'lucide-react';
 
 const stats = [
@@ -29,13 +29,6 @@ const recentStudents = [
   { name: 'David Musonda', email: 'david@example.com', enrolled: 'Drone Engineering', date: '2 days ago', status: 'active' },
 ];
 
-const recentOrders = [
-  { id: '#ORD-2401', customer: 'Mwila C.', items: 'Arduino Starter Kit', total: 'K450', status: 'delivered', date: 'Today' },
-  { id: '#ORD-2400', customer: 'Grace N.', items: 'ESP32 Dev Board ×2', total: 'K170', status: 'shipped', date: 'Yesterday' },
-  { id: '#ORD-2399', customer: 'Thandiwe M.', items: 'Sensor Mega Pack', total: 'K180', status: 'processing', date: 'Yesterday' },
-  { id: '#ORD-2398', customer: 'Joseph K.', items: 'Robotic Arm Kit', total: 'K380', status: 'delivered', date: '2 days ago' },
-];
-
 const coursePerformance = [
   { name: 'Arduino Robotics Fundamentals', students: 340, completion: 78, revenue: 'K51,000', rating: 4.8 },
   { name: 'IoT with ESP32 & MQTT', students: 245, completion: 72, revenue: 'K36,750', rating: 4.7 },
@@ -44,12 +37,11 @@ const coursePerformance = [
 ];
 
 const alerts = [
-  { type: 'warning', text: 'ESP32 Dev Board stock running low (5 remaining)', time: '1h ago' },
   { type: 'info', text: 'New competition submission from Team Innovate', time: '3h ago' },
   { type: 'success', text: '12 new students enrolled today', time: '5h ago' },
 ];
 
-const adminTabs = ['Overview', 'Users', 'Courses', 'Orders', 'Game Lab', 'Settings'];
+const adminTabs = ['Overview', 'Users', 'Courses', 'Game Lab', 'Settings'];
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('Overview');
@@ -221,68 +213,35 @@ export default function AdminPage() {
             </div>
           </Section>
 
-          {/* Course Performance + Recent Orders */}
+          {/* Course Performance */}
           <Section className="py-6 pb-12">
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Course Performance */}
-              <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-brand-accent" /> Course Performance
-                  </h3>
-                </div>
-                <div className="space-y-4">
-                  {coursePerformance.map((course, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-white/5">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="text-sm font-medium text-white">{course.name}</h4>
-                        <div className="flex items-center gap-1 text-brand-accent text-xs">
-                          ★ {course.rating}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-white/30 mb-2">
-                        <span>{course.students} students</span>
-                        <span>{course.revenue}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ProgressBar value={course.completion} />
-                        <span className="text-xs text-white/30 shrink-0">{course.completion}%</span>
+            <GlassCard className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-heading font-semibold text-white flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-brand-accent" /> Course Performance
+                </h3>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {coursePerformance.map((course, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-white/5">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="text-sm font-medium text-white">{course.name}</h4>
+                      <div className="flex items-center gap-1 text-brand-accent text-xs">
+                        ★ {course.rating}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </GlassCard>
-
-              {/* Recent Orders */}
-              <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <Package className="w-4 h-4 text-brand-accent" /> Recent Orders
-                  </h3>
-                  <Button variant="ghost" size="sm">View All <ChevronRight className="w-3 h-3 ml-1" /></Button>
-                </div>
-                <div className="space-y-3">
-                  {recentOrders.map((order, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-white/5">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-white">{order.id}</p>
-                          <Badge variant={
-                            order.status === 'delivered' ? 'primary' :
-                            order.status === 'shipped' ? 'accent' : 'danger'
-                          } className="text-[10px]">{order.status}</Badge>
-                        </div>
-                        <p className="text-xs text-white/40 mt-0.5">{order.customer} — {order.items}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-white">{order.total}</p>
-                        <p className="text-[10px] text-white/30">{order.date}</p>
-                      </div>
+                    <div className="flex items-center gap-4 text-xs text-white/30 mb-2">
+                      <span>{course.students} students</span>
+                      <span>{course.revenue}</span>
                     </div>
-                  ))}
-                </div>
-              </GlassCard>
-            </div>
+                    <div className="flex items-center gap-2">
+                      <ProgressBar value={course.completion} />
+                      <span className="text-xs text-white/30 shrink-0">{course.completion}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
           </Section>
         </>
       )}
@@ -380,47 +339,6 @@ export default function AdminPage() {
         </Section>
       )}
 
-      {activeTab === 'Orders' && (
-        <Section className="py-8">
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-heading text-lg font-semibold text-white">Order Management</h3>
-              <Input placeholder="Search orders..." icon={<Search className="w-4 h-4" />} />
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Order ID</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Customer</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Items</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Total</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Status</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {recentOrders.map((o, i) => (
-                    <tr key={i} className="hover:bg-white/5 transition-colors">
-                      <td className="py-3 text-sm font-medium text-white">{o.id}</td>
-                      <td className="py-3 text-sm text-white/50">{o.customer}</td>
-                      <td className="py-3 text-sm text-white/50">{o.items}</td>
-                      <td className="py-3 text-sm font-bold text-white">{o.total}</td>
-                      <td className="py-3">
-                        <Badge variant={o.status === 'delivered' ? 'primary' : o.status === 'shipped' ? 'accent' : 'danger'}>
-                          {o.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-xs text-white/30">{o.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
-        </Section>
-      )}
-
       {activeTab === 'Settings' && (
         <Section className="py-8">
           <div className="grid md:grid-cols-2 gap-6">
@@ -447,8 +365,6 @@ export default function AdminPage() {
               <div className="space-y-3">
                 {[
                   { label: 'New enrollment alerts', enabled: true },
-                  { label: 'Order notifications', enabled: true },
-                  { label: 'Low stock warnings', enabled: true },
                   { label: 'Competition submissions', enabled: false },
                   { label: 'Forum reports', enabled: true },
                 ].map((n, i) => (

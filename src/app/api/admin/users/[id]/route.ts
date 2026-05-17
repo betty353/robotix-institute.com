@@ -49,7 +49,6 @@ export async function GET(request: NextRequest, { params }: Params) {
             forumPosts: true,
             certificates: true,
             achievements: true,
-            orders: true,
           },
         },
       },

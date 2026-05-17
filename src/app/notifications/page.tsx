@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Bell, Check, CheckCheck, Trash2, BookOpen, Trophy,
-  MessageCircle, ShoppingCart, Award, Settings
+  MessageCircle, Award, Settings
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -20,7 +20,6 @@ const typeIcons: Record<string, React.ReactNode> = {
   course: <BookOpen className="w-5 h-5 text-blue-400" />,
   competition: <Trophy className="w-5 h-5 text-purple-400" />,
   forum: <MessageCircle className="w-5 h-5 text-green-400" />,
-  order: <ShoppingCart className="w-5 h-5 text-orange-400" />,
   system: <Settings className="w-5 h-5 text-white/40" />,
 };
 
