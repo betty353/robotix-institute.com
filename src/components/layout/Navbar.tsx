@@ -4,10 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthStore, useCartStore } from '@/store';
+import { useAuthStore } from '@/store';
 import {
-  Menu, X, ChevronDown, ShoppingCart, User, LogOut,
-  GraduationCap, Code, Cpu, Gamepad2, Trophy, Store,
+  Menu, X, ChevronDown,
+  GraduationCap, Code, Cpu, Gamepad2, Trophy,
   Users, Bot, Briefcase, Wifi, BookOpen, Bell, Search,
   Map, Newspaper, BarChart3
 } from 'lucide-react';
@@ -40,7 +40,6 @@ const navItems = [
     ],
   },
   { label: 'Blog', href: '/blog' },
-  { label: 'Marketplace', href: '/marketplace' },
   { label: 'Community', href: '/community' },
 ];
 
@@ -55,7 +54,6 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const { isAuthenticated, user, token } = useAuthStore();
-  const cartCount = useCartStore((s) => s.itemCount());
   const searchRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -180,7 +178,7 @@ export default function Navbar() {
   };
 
   const typeIcons: Record<string, string> = {
-    course: '📚', blog: '📰', project: '🔧', forum: '💬', product: '🛒', path: '🗺️',
+    course: '📚', blog: '📰', project: '🔧', forum: '💬', path: '🗺️',
   };
 
   return (
@@ -382,19 +380,6 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             )}
-
-            {/* Cart */}
-            <Link
-              href="/marketplace/cart"
-              className="relative p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-accent text-brand-dark text-xs font-bold flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
 
             {/* Auth Buttons */}
             {isAuthenticated ? (

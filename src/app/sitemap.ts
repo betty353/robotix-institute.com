@@ -14,7 +14,6 @@ const STATIC_ROUTES = [
   'iot',
   'arena',
   'competitions',
-  'marketplace',
   'community',
   'blog',
   'ai-tutor',

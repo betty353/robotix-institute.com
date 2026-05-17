@@ -73,20 +73,6 @@ export interface RobotProject {
   views: number;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  salePrice?: number;
-  category: string;
-  thumbnail?: string;
-  images: string[];
-  stock: number;
-  featured: boolean;
-}
-
 export interface Competition {
   id: string;
   title: string;
@@ -141,11 +127,6 @@ export interface IoTDevice {
   sensorData?: Record<string, unknown>;
 }
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
-
 export interface NavItem {
   label: string;
   href: string;
@@ -155,7 +136,7 @@ export interface NavItem {
 
 export interface Notification {
   id: string;
-  type: 'achievement' | 'course' | 'competition' | 'forum' | 'order' | 'system';
+  type: 'achievement' | 'course' | 'competition' | 'forum' | 'system';
   title: string;
   message: string;
   link?: string;
@@ -224,7 +205,7 @@ export interface BlogComment {
 }
 
 export interface SearchResult {
-  type: 'course' | 'project' | 'blog' | 'forum' | 'product' | 'path';
+  type: 'course' | 'project' | 'blog' | 'forum' | 'path';
   id: string;
   title: string;
   description: string;

@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const searchFilter = { contains: query, mode: 'insensitive' as const };
 
     // Search across all content types in parallel
-    const [courses, projects, blogPosts, forumPosts, products, paths] = await Promise.all([
+    const [courses, projects, blogPosts, forumPosts, paths] = await Promise.all([
       prisma.course.findMany({
         where: {
           published: true,
@@ -45,14 +45,6 @@ export async function GET(request: Request) {
           OR: [{ title: searchFilter }, { content: searchFilter }],
         },
         select: { id: true, title: true, content: true },
-        take: limit,
-      }),
-      prisma.product.findMany({
-        where: {
-          isActive: true,
-          OR: [{ name: searchFilter }, { description: searchFilter }],
-        },
-        select: { id: true, name: true, description: true, slug: true, thumbnail: true },
         take: limit,
       }),
       prisma.learningPath.findMany({
@@ -105,14 +97,6 @@ export async function GET(request: Request) {
         title: f.title,
         description: f.content.substring(0, 120),
         url: `/community?post=${f.id}`,
-      })),
-      ...products.map((p: any) => ({
-        type: 'product' as const,
-        id: p.id,
-        title: p.name,
-        description: p.description.substring(0, 120),
-        url: `/marketplace/${p.slug}`,
-        thumbnail: p.thumbnail,
       })),
     ].slice(0, limit);
 

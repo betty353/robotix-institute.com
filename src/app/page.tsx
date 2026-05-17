@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import {
-  GraduationCap, Code, Cpu, Gamepad2, Trophy, Store, Users,
+  GraduationCap, Code, Cpu, Gamepad2, Trophy, Users,
   Bot, ArrowRight, Zap, Globe, Award, BookOpen, Wifi, Rocket,
   Star, ChevronRight, Play, CircuitBoard
 } from 'lucide-react';
@@ -126,12 +126,6 @@ const platformFeatures = [
     title: 'Competitions',
     description: 'Join national robotics competitions with team registration, judging, and leaderboards.',
     href: '/competitions',
-  },
-  {
-    icon: <Store className="w-6 h-6" />,
-    title: 'Marketplace',
-    description: 'Shop Arduino kits, ESP32 boards, sensors, robotics kits, and drone parts.',
-    href: '/marketplace',
   },
 ];
 

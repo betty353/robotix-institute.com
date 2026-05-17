@@ -48,25 +48,19 @@ export default function TermsPage() {
             platform and showcase it for educational purposes.
           </p>
 
-          <h2>5. Marketplace</h2>
-          <p>
-            Hardware orders are subject to availability. Returns accepted within
-            14 days for unopened, undamaged items. Faulty items will be replaced.
-          </p>
-
-          <h2>6. Termination</h2>
+          <h2>5. Termination</h2>
           <p>
             We may suspend accounts that violate these Terms. You can delete your
             account at any time.
           </p>
 
-          <h2>7. Liability</h2>
+          <h2>6. Liability</h2>
           <p>
             The platform is provided &ldquo;as is&rdquo;. We don&apos;t guarantee uptime, and we
             aren&apos;t liable for indirect damages.
           </p>
 
-          <h2>8. Governing law</h2>
+          <h2>7. Governing law</h2>
           <p>These Terms are governed by the laws of the Republic of Zambia.</p>
         </GlassCard>
       </Section>

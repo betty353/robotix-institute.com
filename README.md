@@ -51,7 +51,6 @@ src/
 │   ├── iot/               # IoT Control Center
 │   ├── competitions/      # Competition Platform
 │   ├── portfolio/         # Student Portfolios
-│   ├── marketplace/       # Robotics Store
 │   ├── community/         # Community Hub
 │   ├── api/               # API Routes
 │   └── admin/             # Admin Dashboard

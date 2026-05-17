@@ -44,7 +44,6 @@ model User {
   gameScores      GameScore[]
   achievements    UserAchievement[]
   teamMembers     TeamMember[]
-  orders          Order[]
   iotDevices      IoTDevice[]
   portfolio       Portfolio?
   instructorCourses Course[]  @relation("CourseInstructor")
@@ -465,59 +464,6 @@ model PortfolioItem {
   @@index([portfolioId])
 }
 
-// ─── Marketplace ────────────────────────────────────────────
-
-model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String
-  price       Float
-  salePrice   Float?
-  category    String
-  thumbnail   String?
-  images      String[] // array of image URLs
-  stock       Int      @default(0)
-  featured    Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  specs       String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  orderItems OrderItem[]
-
-  @@index([slug])
-  @@index([category])
-}
-
-model Order {
-  id        String   @id @default(cuid())
-  userId    String
-  total     Float
-  status    String   @default("pending") // pending, confirmed, shipped, delivered
-  address   String
-  phone     String
-  createdAt DateTime @default(now())
-
-  user  User        @relation(fields: [userId], references: [id])
-  items OrderItem[]
-
-  @@index([userId])
-}
-
-model OrderItem {
-  id        String @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Float
-
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
-
-  @@index([orderId])
-}
-
 // ─── Community & Forum ──────────────────────────────────────
 
 model ForumCategory {
@@ -570,7 +516,7 @@ model ForumComment {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // achievement, course, competition, forum, order, system
+  type      String   // achievement, course, competition, forum, system
   title     String
   message   String
   link      String?  // URL to navigate to
