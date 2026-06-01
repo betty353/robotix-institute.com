@@ -27,9 +27,14 @@ npx prisma db push
 # Seed database
 npx prisma db seed
 
+# Apply schema changes
+npx prisma db push
+
 # Run development server
 npm run dev
 ```
+
+To enable production-grade password reset emails and inbox notifications, add the `RESEND_*` and `CONTACT_INBOX_EMAIL` values from `.env.example`.
 
 ### Game Lab (Phaser + Monaco)
 

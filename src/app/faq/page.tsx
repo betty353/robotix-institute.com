@@ -10,7 +10,7 @@ import { ChevronDown, HelpCircle } from 'lucide-react';
 const faqs = [
   {
     q: 'How old do I need to be to join?',
-    a: 'Robotix Institute is open to learners aged 8 and up. Younger children should learn with a parent or teacher.',
+    a: 'Robotix Institute publicly offers programs from pre-elementary through older teen learners, with different pathways such as Little Einsteins, Byte Buddies, Imagineering, and Code Quest.',
   },
   {
     q: 'Is the platform free?',
@@ -42,7 +42,7 @@ const faqs = [
   },
   {
     q: 'How can my school partner with you?',
-    a: 'We love working with schools! Email partnerships@robotixinstitute.co.zm or use the contact form.',
+    a: 'We love working with schools. Use the contact page or email info@robotixinstitute.io to start a partnership conversation.',
   },
   {
     q: 'Where do you ship?',

@@ -4,44 +4,58 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthStore, useCartStore } from '@/store';
+import { useAuthStore } from '@/store';
 import {
-  Menu, X, ChevronDown, ShoppingCart, User, LogOut,
-  GraduationCap, Code, Cpu, Gamepad2, Trophy, Store,
-  Users, Bot, Briefcase, Wifi, BookOpen, Bell, Search,
-  Map, Newspaper, BarChart3
+  Menu, X, ChevronDown,
+  GraduationCap, Code, Cpu, Gamepad2, Trophy,
+  Users, Bot, Wifi, BookOpen, Bell, Search,
+  Map, BarChart3, Building2, Radio, Shield, Zap
 } from 'lucide-react';
 
 const navItems = [
   {
-    label: 'Learn',
+    label: 'Ecosystem',
     children: [
-      { label: 'Courses', href: '/courses', icon: GraduationCap },
+      { label: 'Robotix Academy', href: '/courses', icon: GraduationCap },
       { label: 'Learning Paths', href: '/paths', icon: Map },
-      { label: 'Project Library', href: '/projects', icon: BookOpen },
-      { label: 'AI Tutor', href: '/ai-tutor', icon: Bot },
+      { label: 'Innovation Portfolio', href: '/portfolio', icon: BookOpen },
+      { label: 'Onboarding', href: '/onboarding', icon: Shield },
+      { label: 'Robotix AI', href: '/ai-tutor', icon: Bot },
     ],
   },
   {
     label: 'Build',
     children: [
-      { label: 'Game Lab (Phaser)', href: '/game-lab', icon: Gamepad2 },
-      { label: 'Game Gallery', href: '/game-gallery', icon: Gamepad2 },
-      { label: 'Coder Station', href: '/playground', icon: Code },
-      { label: 'Simulation Lab', href: '/simulation', icon: Cpu },
-      { label: 'IoT Control', href: '/iot', icon: Wifi },
+      { label: 'AI Builder', href: '/build', icon: Code },
+      { label: 'IDE Lab', href: '/playground', icon: Code },
+      { label: 'Robotix Blocks', href: '/robotix-blocks', icon: Code },
+      { label: 'Robotics Simulator', href: '/simulation', icon: Cpu },
+      { label: 'IoT Control Grid', href: '/iot', icon: Wifi },
+      { label: 'PlayVerse Studio', href: '/game-lab', icon: Gamepad2 },
     ],
   },
   {
-    label: 'Compete',
+    label: 'Network',
     children: [
-      { label: 'Game Arena', href: '/arena', icon: Gamepad2 },
+      { label: 'Community', href: '/community', icon: Users },
       { label: 'Competitions', href: '/competitions', icon: Trophy },
+      { label: 'Innovation Media', href: '/blog', icon: Radio },
+      { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { label: 'Events', href: '/events', icon: Building2 },
     ],
   },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Marketplace', href: '/marketplace' },
-  { label: 'Community', href: '/community' },
+  {
+    label: 'PlayVerse',
+    children: [
+      { label: 'Arcade', href: '/play', icon: Gamepad2 },
+      { label: 'Creator Gallery', href: '/game-gallery', icon: Trophy },
+      { label: 'Studio', href: '/game-lab', icon: Code },
+      { label: 'IDE Arcade', href: '/playground', icon: Zap },
+    ],
+  },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Weekend Classes', href: '/weekend-classes' },
+  { label: 'Schools & Partners', href: '/partners' },
 ];
 
 export default function Navbar() {
@@ -55,7 +69,6 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const { isAuthenticated, user, token } = useAuthStore();
-  const cartCount = useCartStore((s) => s.itemCount());
   const searchRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -184,13 +197,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-brand-dark/80 backdrop-blur-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/15 bg-[rgba(22,49,95,0.72)] shadow-[0_18px_45px_rgba(9,26,58,0.2)] backdrop-blur-2xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <Image
-              src="/images/logo-white.png"
+              src="/images/logo-color.png"
               alt="Robotix Institute"
               width={160}
               height={44}
@@ -209,7 +222,7 @@ export default function Navbar() {
                   onMouseEnter={() => setActiveDropdown(item.label)}
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                  <button className="flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/5 hover:text-white">
                     {item.label}
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -220,13 +233,13 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-white/10 bg-brand-dark-surface/95 backdrop-blur-xl shadow-glass overflow-hidden"
+                        className="absolute left-0 top-full mt-1 w-60 overflow-hidden rounded-2xl border border-white/30 bg-[rgba(242,248,255,0.94)] backdrop-blur-xl shadow-glass"
                       >
                         {item.children.map((child) => (
                           <Link
                             key={child.href}
                             href={child.href}
-                            className="flex items-center gap-3 px-4 py-3 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                            className="flex items-center gap-3 px-4 py-3 text-sm text-brand-primary/80 transition-colors hover:bg-brand-secondary/10 hover:text-brand-dark"
                           >
                             {child.icon && <child.icon className="w-4 h-4 text-brand-accent" />}
                             {child.label}
@@ -240,7 +253,7 @@ export default function Navbar() {
                 <Link
                   key={item.label}
                   href={item.href!}
-                  className="px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/5 hover:text-white"
                 >
                   {item.label}
                 </Link>
@@ -265,45 +278,45 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    className="absolute right-0 top-full mt-2 w-96 rounded-xl border border-white/10 bg-brand-dark-surface/95 backdrop-blur-xl shadow-glass overflow-hidden"
+                    className="absolute right-0 top-full mt-2 w-96 overflow-hidden rounded-xl border border-white/30 bg-[rgba(242,248,255,0.95)] backdrop-blur-xl shadow-glass"
                   >
-                    <div className="p-3 border-b border-white/10">
+                    <div className="border-b border-slate-200/80 p-3">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-primary/35" />
                         <input
                           ref={searchInputRef}
                           type="text"
-                          placeholder="Search courses, projects, blog..."
+                          placeholder="Search labs, projects, media, community..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-12 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-brand-accent/50"
+                          className="w-full rounded-lg border border-slate-200 bg-white/90 py-2.5 pl-10 pr-12 text-sm text-brand-dark placeholder:text-slate-400 focus:border-brand-accent/50 focus:outline-none"
                         />
-                        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-white/30 border border-white/10 rounded">ESC</kbd>
+                        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-mono text-slate-400">ESC</kbd>
                       </div>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
                       {searchLoading && (
-                        <div className="p-4 text-center text-white/40 text-sm">Searching...</div>
+                        <div className="p-4 text-center text-sm text-slate-500">Searching...</div>
                       )}
                       {!searchLoading && searchResults.length === 0 && searchQuery.length >= 2 && (
-                        <div className="p-4 text-center text-white/40 text-sm">No results found</div>
+                        <div className="p-4 text-center text-sm text-slate-500">No results found</div>
                       )}
                       {!searchLoading && searchQuery.length < 2 && (
-                        <div className="p-4 text-center text-white/40 text-sm">Type at least 2 characters...</div>
+                        <div className="p-4 text-center text-sm text-slate-500">Type at least 2 characters...</div>
                       )}
                       {searchResults.map((result: any) => (
                         <Link
                           key={`${result.type}-${result.id}`}
                           href={result.url}
                           onClick={() => { setSearchOpen(false); setSearchQuery(''); setSearchResults([]); }}
-                          className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                          className="flex items-start gap-3 border-b border-slate-200/70 px-4 py-3 transition-colors last:border-0 hover:bg-brand-secondary/10"
                         >
                           <span className="text-lg mt-0.5">{typeIcons[result.type] || '📄'}</span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">{result.title}</p>
-                            <p className="text-xs text-white/40 truncate">{result.description}</p>
+                            <p className="truncate text-sm font-medium text-brand-dark">{result.title}</p>
+                            <p className="truncate text-xs text-slate-500">{result.description}</p>
                           </div>
-                          <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-white/5 text-white/30 font-medium whitespace-nowrap">
+                          <span className="whitespace-nowrap rounded-full bg-brand-secondary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-brand-primary/70">
                             {result.type}
                           </span>
                         </Link>
@@ -334,10 +347,10 @@ export default function Navbar() {
                       initial={{ opacity: 0, y: 8, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/10 bg-brand-dark-surface/95 backdrop-blur-xl shadow-glass overflow-hidden"
+                      className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-xl border border-white/30 bg-[rgba(242,248,255,0.95)] backdrop-blur-xl shadow-glass"
                     >
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                        <h3 className="text-sm font-heading font-semibold text-white">Notifications</h3>
+                      <div className="flex items-center justify-between border-b border-slate-200/80 px-4 py-3">
+                        <h3 className="text-sm font-heading font-semibold text-brand-dark">Notifications</h3>
                         {unreadCount > 0 && (
                           <button
                             onClick={markAllRead}
@@ -349,7 +362,7 @@ export default function Navbar() {
                       </div>
                       <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 ? (
-                          <div className="p-6 text-center text-white/40 text-sm">
+                          <div className="p-6 text-center text-sm text-slate-500">
                             <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
                             No new notifications
                           </div>
@@ -359,11 +372,11 @@ export default function Navbar() {
                               key={notif.id}
                               href={notif.link || '#'}
                               onClick={() => setNotifOpen(false)}
-                              className={`block px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${!notif.read ? 'bg-brand-accent/5' : ''}`}
+                              className={`block border-b border-slate-200/70 px-4 py-3 transition-colors last:border-0 hover:bg-brand-secondary/10 ${!notif.read ? 'bg-brand-secondary/8' : ''}`}
                             >
-                              <p className="text-sm font-medium text-white">{notif.title}</p>
-                              <p className="text-xs text-white/50 mt-0.5 line-clamp-2">{notif.message}</p>
-                              <p className="text-[10px] text-white/30 mt-1">
+                              <p className="text-sm font-medium text-brand-dark">{notif.title}</p>
+                              <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{notif.message}</p>
+                              <p className="mt-1 text-[10px] text-slate-400">
                                 {new Date(notif.createdAt).toLocaleDateString()}
                               </p>
                             </Link>
@@ -373,7 +386,7 @@ export default function Navbar() {
                       <Link
                         href="/notifications"
                         onClick={() => setNotifOpen(false)}
-                        className="block px-4 py-2.5 text-center text-xs font-medium text-brand-accent hover:bg-white/5 border-t border-white/10 transition-colors"
+                        className="block border-t border-slate-200/80 px-4 py-2.5 text-center text-xs font-medium text-brand-accent transition-colors hover:bg-brand-secondary/10"
                       >
                         View all notifications
                       </Link>
@@ -382,19 +395,6 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             )}
-
-            {/* Cart */}
-            <Link
-              href="/marketplace/cart"
-              className="relative p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-accent text-brand-dark text-xs font-bold flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
 
             {/* Auth Buttons */}
             {isAuthenticated ? (
@@ -422,7 +422,7 @@ export default function Navbar() {
                   Sign In
                 </Link>
                 <Link href="/register" className="btn-primary text-sm py-2">
-                  Get Started
+                  Join Ecosystem
                 </Link>
               </div>
             )}
@@ -483,7 +483,7 @@ export default function Navbar() {
                     Sign In
                   </Link>
                   <Link href="/register" className="block w-full text-center btn-primary text-sm py-2">
-                    Get Started
+                    Join Ecosystem
                   </Link>
                 </div>
               )}

@@ -9,7 +9,7 @@ const ContentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://avatars.githubusercontent.com https://cdn.jsdelivr.net",
+  "img-src 'self' data: blob: https://images.unsplash.com https://avatars.githubusercontent.com https://cdn.jsdelivr.net https://www.robotixinstitute.io https://i.ytimg.com https://resources.finalsite.net https://static.wixstatic.com https://bongohive.co.zm",
   "connect-src 'self' ws: wss: https: data:",
   "worker-src 'self' blob:",
   "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
@@ -32,6 +32,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
       { protocol: 'https', hostname: 'cdn.jsdelivr.net' },
+      { protocol: 'https', hostname: 'bongohive.co.zm' },
+      { protocol: 'https', hostname: 'www.robotixinstitute.io' },
+      { protocol: 'https', hostname: 'i.ytimg.com' },
+      { protocol: 'https', hostname: 'resources.finalsite.net' },
+      { protocol: 'https', hostname: 'static.wixstatic.com' },
       { protocol: 'https', hostname: '**.r2.dev' },
     ],
     formats: ['image/avif', 'image/webp'],
@@ -50,7 +55,13 @@ const nextConfig = {
 
   // Don't ship the heavy mqtt browser bundle on routes that don't import it.
   // Next.js already tree-shakes; this is mostly defensive.
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
+    if (dev) {
+      // Node 24 + Windows has been corrupting webpack's persistent dev cache in this repo,
+      // which then surfaces as missing vendor chunks and fallback manifests.
+      config.cache = false;
+    }
+
     if (!isServer) {
       // Allow optional/native deps in mqtt to be skipped on the client
       config.resolve.fallback = {

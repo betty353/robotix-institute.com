@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken } from '@/lib/auth';
 
 const PROTECTED_PREFIXES = [
   '/admin',
@@ -28,6 +27,26 @@ function applySecurityHeaders(res: NextResponse) {
   return res;
 }
 
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4 || 4)) % 4);
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function getTokenPayload(token?: string) {
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+
+  try {
+    return JSON.parse(decodeBase64Url(parts[1])) as { role?: string; exp?: number };
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
@@ -44,9 +63,10 @@ export function middleware(req: NextRequest) {
     return applySecurityHeaders(NextResponse.next());
   }
   const token = req.cookies.get('token')?.value;
-  const user = token ? verifyToken(token) : null;
+  const user = getTokenPayload(token);
+  const isExpired = !!user?.exp && user.exp * 1000 <= Date.now();
 
-  if (!user) {
+  if (!user || isExpired) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', pathname);
@@ -55,7 +75,7 @@ export function middleware(req: NextRequest) {
 
   if (pathname.startsWith('/game-lab') && pathname !== '/game-lab/play' && !pathname.startsWith('/game-lab/play/')) {
     const allowedRoles = ['STUDENT', 'INSTRUCTOR', 'ADMIN'] as const;
-    if (!(allowedRoles as readonly string[]).includes(user.role)) {
+    if (typeof user.role !== 'string' || !(allowedRoles as readonly string[]).includes(user.role)) {
       const url = req.nextUrl.clone();
       url.pathname = '/login';
       return applySecurityHeaders(NextResponse.redirect(url));

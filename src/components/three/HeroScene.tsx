@@ -34,7 +34,7 @@ function RobotCore() {
         {/* Core sphere */}
         <Sphere args={[1.2, 64, 64]}>
           <MeshDistortMaterial
-            color="#2B1EA3"
+            color="#12006B"
             attach="material"
             distort={0.3}
             speed={2}
@@ -45,14 +45,14 @@ function RobotCore() {
 
         {/* Inner glow */}
         <Sphere args={[1.0, 32, 32]}>
-          <meshBasicMaterial color="#F4B400" transparent opacity={0.15} />
+          <meshBasicMaterial color="#33D6FF" transparent opacity={0.18} />
         </Sphere>
 
         {/* Orbit rings */}
         {[1.8, 2.2, 2.6].map((radius, i) => (
           <mesh key={i} rotation={[Math.PI / (3 + i), Math.PI / (4 + i), 0]}>
             <torusGeometry args={[radius, 0.015, 16, 100]} />
-            <meshBasicMaterial color="#F4B400" transparent opacity={0.4 - i * 0.1} />
+            <meshBasicMaterial color="#33D6FF" transparent opacity={0.4 - i * 0.1} />
           </mesh>
         ))}
 
@@ -70,7 +70,7 @@ function RobotCore() {
               ]}
             >
               <sphereGeometry args={[0.05, 16, 16]} />
-              <meshBasicMaterial color="#F4B400" />
+              <meshBasicMaterial color="#8A3FFC" />
             </mesh>
           );
         })}
@@ -111,7 +111,7 @@ function CircuitParticles({ count = 500 }: { count?: number }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.03}
-        color="#F4B400"
+        color="#33D6FF"
         transparent
         opacity={0.6}
         sizeAttenuation={true}
@@ -133,15 +133,15 @@ export default function HeroScene() {
         frameloop="always"
       >
         <ambientLight intensity={0.3} />
-        <pointLight position={[10, 10, 10]} intensity={1} color="#F4B400" />
-        {!isLow && <pointLight position={[-10, -10, -10]} intensity={0.5} color="#2B1EA3" />}
+        <pointLight position={[10, 10, 10]} intensity={1} color="#33D6FF" />
+        {!isLow && <pointLight position={[-10, -10, -10]} intensity={0.5} color="#8A3FFC" />}
         {!isLow && (
           <spotLight
             position={[0, 5, 5]}
             angle={0.3}
             penumbra={1}
             intensity={0.8}
-            color="#F4B400"
+            color="#86EAFF"
           />
         )}
         <RobotCore />

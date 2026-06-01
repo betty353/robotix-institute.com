@@ -1,250 +1,239 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  BrainCircuit,
+  Flame,
+  Gamepad2,
+  Gauge,
+  Rocket,
+  Shield,
+  Sparkles,
+  Trophy,
+} from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { Section, GlassCard, Badge, Button, ProgressBar, EmptyState, LoadingSpinner } from '@/components/ui';
-import { useAuth, useApi } from '@/hooks/useApi';
-import {
-  GraduationCap, Code, Trophy, Bell, BookOpen, Cpu,
-  ArrowRight, Calendar, Award, Sparkles, Rocket, Gamepad2
-} from 'lucide-react';
-
-interface MeData {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  /** Institute gamification lifetime points */
-  points?: number;
-  createdAt: string;
-  _count?: {
-    enrollments: number;
-    codeProjects: number;
-    robotProjects: number;
-    forumPosts: number;
-    certificates: number;
-    achievements: number;
-  };
-}
+import { AuthGate } from '@/components/learning/AuthGate';
+import { FirebaseLoginCard } from '@/components/learning/FirebaseLoginCard';
+import { useLearningProfile } from '@/components/learning/useLearningProfile';
+import { Badge, Button, GlassCard, ProgressBar, Section } from '@/components/ui';
+import { familySignals, onboardingTracks } from '@/lib/ecosystem-data';
+import { learningPaths } from '@/lib/learning-data';
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuth();
-  const { get } = useApi();
-  const [me, setMe] = useState<MeData | null>(null);
-  const [recentNotifs, setRecentNotifs] = useState<any[]>([]);
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    profile,
+    level,
+    levelProgress,
+    badges,
+    completedCount,
+    totalLessons,
+    nextLesson,
+  } = useLearningProfile();
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const load = async () => {
-      try {
-        const [meRes, notifs, enrolls] = await Promise.all([
-          get<MeData>('/auth/me'),
-          get<{ notifications: any[] }>('/notifications?limit=5').catch(() => null),
-          get<{ enrollments: any[] }>('/enrollments?limit=4').catch(() => null),
-        ]);
-        if (meRes?.data) setMe(meRes.data);
-        if (notifs?.data?.notifications) setRecentNotifs(notifs.data.notifications);
-        if (enrolls?.data?.enrollments) setEnrollments(enrolls.data.enrollments);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [isAuthenticated, get]);
-
-  if (!isAuthenticated) {
-    return (
-      <main className="bg-brand-dark min-h-screen">
-        <Navbar />
-        <Section className="pt-32">
-          <EmptyState
-            icon={<GraduationCap className="w-8 h-8" />}
-            title="Sign in to see your dashboard"
-            description="Track your courses, projects, achievements and notifications all in one place."
-            action={<Link href="/login"><Button>Sign In</Button></Link>}
-          />
-        </Section>
-        <Footer />
-      </main>
-    );
-  }
-
-  const counts = me?._count || { enrollments: 0, codeProjects: 0, robotProjects: 0, forumPosts: 0, certificates: 0, achievements: 0 };
-
-  const quickStats = [
-    { label: 'Courses', value: counts.enrollments, icon: BookOpen, href: '/courses', color: 'from-blue-500 to-indigo-500' },
-    { label: 'Code Projects', value: counts.codeProjects, icon: Code, href: '/playground', color: 'from-green-500 to-emerald-500' },
-    { label: 'Robot Projects', value: counts.robotProjects, icon: Cpu, href: '/projects', color: 'from-purple-500 to-violet-500' },
-    { label: 'Achievements', value: counts.achievements, icon: Award, href: '/portfolio', color: 'from-yellow-500 to-orange-500' },
-  ];
-
-  const quickActions = [
-    { label: 'Continue Learning', desc: 'Resume your last course', href: '/courses', icon: BookOpen },
-    { label: 'Open Coder Station', desc: 'Write & run code', href: '/playground', icon: Code },
-    { label: 'Game Lab', desc: 'Phaser games in the browser', href: '/game-lab', icon: Gamepad2 },
-    { label: 'Game Arena', desc: 'Compete & climb the leaderboard', href: '/arena', icon: Trophy },
-    { label: 'Build Portfolio', desc: 'Showcase your robotics projects', href: '/portfolio', icon: Sparkles },
+  const statCards = [
+    { label: 'XP signal', value: profile.xp.toLocaleString(), icon: Sparkles },
+    { label: 'Innovation level', value: level, icon: Gauge },
+    { label: 'Learning streak', value: `${profile.streak} days`, icon: Flame },
+    { label: 'Lessons completed', value: `${completedCount}/${totalLessons}`, icon: BookOpen },
   ];
 
   return (
-    <main className="bg-brand-dark min-h-screen">
+    <main className="min-h-screen bg-brand-dark text-white">
       <Navbar />
 
-      <section className="pt-28 pb-6 border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <Badge variant="accent">
-                <Sparkles className="w-3 h-3 mr-1" /> Welcome back
+      <section className="relative overflow-hidden pt-28">
+        <div className="aurora-bg absolute inset-0 opacity-80" />
+        <div className="bg-grid absolute inset-0 opacity-10" />
+        <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-end">
+            <div>
+              <Badge variant="accent" className="mb-4">
+                <Trophy className="mr-1 h-3 w-3" />
+                Digital Identity
               </Badge>
-              {typeof me?.points === 'number' ? (
-                <Link href="/arena">
-                  <Badge variant="primary" className="cursor-pointer hover:opacity-90">
-                    ✨ {me.points.toLocaleString()} institute pts
-                  </Badge>
-                </Link>
-              ) : null}
+              <h1 className="font-heading text-4xl font-bold sm:text-5xl">
+                Your innovation identity across learning, building, gaming, and creation.
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg text-white/65">
+                This dashboard is designed as a future-facing identity layer, closer to GitHub plus LinkedIn plus Roblox than a normal student profile page.
+              </p>
             </div>
-            <h1 className="font-heading text-3xl font-bold text-white">
-              Hi {user?.firstName || 'there'} 👋
-            </h1>
-            <p className="text-sm text-white/40 mt-1">
-              Here's what's happening with your learning today.
-            </p>
-          </motion.div>
+
+            <GlassCard className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-brand-secondary">Identity signal</p>
+                  <h2 className="mt-2 font-heading text-2xl font-semibold">Progress should feel visible and valuable.</h2>
+                </div>
+                <Shield className="h-6 w-6 text-brand-secondary" />
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {[
+                  { label: 'Portfolio mode', value: 'Building' },
+                  { label: 'Community path', value: 'Connected' },
+                  { label: 'Creator state', value: 'Active' },
+                  { label: 'Next unlock', value: 'In motion' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="text-xs uppercase tracking-[0.24em] text-white/40">{item.label}</div>
+                    <div className="mt-3 text-2xl font-bold">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </div>
         </div>
       </section>
 
-      {loading ? (
-        <LoadingSpinner size="lg" />
-      ) : (
-        <>
-          {/* Quick stats */}
-          <Section className="py-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {quickStats.map((stat, i) => (
-                <Link key={stat.label} href={stat.href}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <GlassCard hover className="p-5">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-                        <stat.icon className="w-5 h-5 text-white" />
-                      </div>
-                      <p className="text-2xl font-heading font-bold text-white">{stat.value}</p>
-                      <p className="text-xs text-white/40 mt-1">{stat.label}</p>
-                    </GlassCard>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </Section>
+      <AuthGate>
+        <Section className="py-8">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {statCards.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <GlassCard className="p-5">
+                  <stat.icon className="mb-3 h-6 w-6 text-brand-secondary" />
+                  <p className="font-heading text-2xl font-bold">{stat.value}</p>
+                  <p className="text-sm text-white/45">{stat.label}</p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        </Section>
 
-          <Section className="py-8 grid lg:grid-cols-3 gap-6">
-            {/* Quick actions */}
-            <div className="lg:col-span-2 space-y-6">
+        <Section className="py-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+            <div className="space-y-6">
               <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <Rocket className="w-4 h-4 text-brand-accent" /> Quick Actions
-                  </h2>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-heading text-2xl font-bold">Level progression</h2>
+                    <p className="text-sm text-white/50">A visible innovation ladder from beginner to advanced.</p>
+                  </div>
+                  <Badge variant="primary">{level}</Badge>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {quickActions.map((a) => (
-                    <Link key={a.href} href={a.href}>
-                      <div className="group p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent shrink-0">
-                            <a.icon className="w-5 h-5" />
+                <ProgressBar value={levelProgress} showLabel />
+              </GlassCard>
+
+              <GlassCard className="p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-heading text-2xl font-bold">Learning pathways</h2>
+                    <p className="text-sm text-white/50">Track your robotics, AI, programming, and creator momentum.</p>
+                  </div>
+                  <BarChart3 className="h-5 w-5 text-brand-secondary" />
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {learningPaths.map((path) => {
+                    const completed = path.lessons.filter((lesson) => profile.completedLessonIds.includes(lesson.id)).length;
+                    const progress = Math.round((completed / path.lessons.length) * 100);
+                    const Icon = path.icon;
+                    return (
+                      <Link key={path.slug} href={path.href} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:bg-white/[0.05]">
+                        <div className="mb-3 flex items-center gap-3">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${path.accent}`}>
+                            <Icon className="h-5 w-5" />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-white group-hover:text-brand-accent transition-colors">
-                              {a.label}
-                            </p>
-                            <p className="text-xs text-white/40 mt-0.5">{a.desc}</p>
+                          <div>
+                            <p className="font-semibold text-white">{path.shortTitle}</p>
+                            <p className="text-xs text-white/40">{completed}/{path.lessons.length} lessons</p>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-brand-accent transition-colors" />
                         </div>
-                      </div>
-                    </Link>
+                        <ProgressBar value={progress} />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </GlassCard>
+            </div>
+
+            <aside className="space-y-5">
+              <FirebaseLoginCard />
+
+              <GlassCard className="p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Rocket className="h-5 w-5 text-brand-secondary" />
+                  <h2 className="font-heading text-lg font-bold">Recommended next move</h2>
+                </div>
+                <p className="font-semibold text-white">{nextLesson.title}</p>
+                <p className="mt-1 text-sm text-white/50">{nextLesson.pathTitle}</p>
+                <Link href={`/learn/${nextLesson.pathSlug}`}>
+                  <Button className="mt-4 w-full justify-center">Continue lesson</Button>
+                </Link>
+              </GlassCard>
+
+              <GlassCard className="p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Award className="h-5 w-5 text-brand-secondary" />
+                  <h2 className="font-heading text-lg font-bold">Achievements</h2>
+                </div>
+                {badges.length === 0 ? (
+                  <p className="text-sm text-white/50">Complete a lesson to earn your first visible achievement.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {badges.map((badge) => <Badge key={badge} variant="accent">{badge}</Badge>)}
+                  </div>
+                )}
+              </GlassCard>
+
+              <GlassCard className="p-5">
+                <p className="mb-3 font-heading font-semibold">Quick launch</p>
+                <div className="grid gap-2">
+                  <Link href="/onboarding" className="rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-sm text-white/70 transition-colors hover:text-white">
+                    <Shield className="mr-2 inline h-4 w-4" /> Personalized onboarding
+                  </Link>
+                  <Link href="/learn" className="rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-sm text-white/70 transition-colors hover:text-white">Learning paths</Link>
+                  <Link href="/play" className="rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-sm text-white/70 transition-colors hover:text-white">
+                    <Gamepad2 className="mr-2 inline h-4 w-4" /> PlayVerse
+                  </Link>
+                  <Link href="/build" className="rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-sm text-white/70 transition-colors hover:text-white">
+                    <BrainCircuit className="mr-2 inline h-4 w-4" /> AI Builder
+                  </Link>
+                </div>
+              </GlassCard>
+
+              <GlassCard className="p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-brand-secondary" />
+                  <h2 className="font-heading text-lg font-bold">Parent mode</h2>
+                </div>
+                <div className="space-y-3">
+                  {familySignals.map((signal) => (
+                    <div key={signal.title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                      <p className="text-sm font-medium text-white">{signal.title}</p>
+                      <p className="mt-1 text-xs text-white/50">{signal.detail}</p>
+                    </div>
                   ))}
                 </div>
               </GlassCard>
+            </aside>
+          </div>
+        </Section>
 
-              {/* Active courses */}
-              <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-brand-accent" /> Continue Learning
-                  </h2>
-                  <Link href="/courses" className="text-xs text-brand-accent hover:underline">All courses</Link>
-                </div>
-                {enrollments.length === 0 ? (
-                  <EmptyState
-                    icon={<GraduationCap className="w-8 h-8" />}
-                    title="No active enrollments yet"
-                    description="Browse our catalog and enroll in your first robotics course."
-                    action={<Link href="/courses"><Button size="sm">Browse Courses</Button></Link>}
-                  />
-                ) : (
-                  <div className="space-y-3">
-                    {enrollments.map((e) => (
-                      <Link key={e.id} href={`/courses/${e.course?.slug || ''}`}>
-                        <div className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-semibold text-white">{e.course?.title || 'Course'}</p>
-                            <span className="text-xs text-white/40">{Math.round((e.progress || 0) * 100)}%</span>
-                          </div>
-                          <ProgressBar value={(e.progress || 0) * 100} />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+        <Section className="py-8">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {onboardingTracks.map((track) => (
+              <GlassCard key={track.id} className="p-5">
+                <p className="text-xs uppercase tracking-[0.2em] text-brand-secondary">{track.id}</p>
+                <h3 className="mt-3 font-heading text-lg font-semibold">{track.title}</h3>
+                <p className="mt-2 text-sm text-white/55">{track.summary}</p>
+                <Link href={track.destination} className="mt-4 inline-flex text-sm font-semibold text-brand-accent">
+                  Open lane
+                </Link>
               </GlassCard>
-            </div>
-
-            {/* Notifications */}
-            <div>
-              <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-brand-accent" /> Recent
-                  </h2>
-                  <Link href="/notifications" className="text-xs text-brand-accent hover:underline">All</Link>
-                </div>
-                {recentNotifs.length === 0 ? (
-                  <p className="text-sm text-white/40 text-center py-6">You're all caught up! 🎉</p>
-                ) : (
-                  <div className="space-y-3">
-                    {recentNotifs.map((n: any) => (
-                      <Link key={n.id} href={n.link || '#'} className="block p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                        <p className="text-sm font-medium text-white line-clamp-1">{n.title}</p>
-                        <p className="text-xs text-white/50 line-clamp-2 mt-1">{n.message}</p>
-                        <p className="text-[10px] text-white/30 mt-1 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(n.createdAt).toLocaleDateString()}
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </GlassCard>
-            </div>
-          </Section>
-        </>
-      )}
-
+            ))}
+          </div>
+        </Section>
+      </AuthGate>
       <Footer />
     </main>
   );

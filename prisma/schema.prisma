@@ -56,6 +56,7 @@ model User {
   gameProjects         GameProject[]
   gameProjectLikes     GameProjectLike[]
   gamificationLogs     GamificationLog[]
+  passwordResetTokens  PasswordResetToken[]
 
   /// Total lifetime points — used for all-time leaderboard and badges.
   points Int @default(0)
@@ -63,6 +64,57 @@ model User {
   @@index([email])
   @@index([role])
   @@index([points(sort: Desc)])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    String   @default("NEW")
+  source    String   @default("website-contact-form")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([email])
+}
+
+model WeekendClassLead {
+  id                String   @id @default(cuid())
+  parentName        String
+  parentEmail       String
+  parentPhone       String
+  childName         String
+  childAge          String
+  childSchool       String?
+  preferredTrack    String
+  preferredSchedule String
+  notes             String?
+  status            String   @default("NEW")
+  source            String   @default("weekend-classes-page")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([parentEmail])
 }
 
 // ─── Course & LMS ───────────────────────────────────────────
@@ -228,6 +280,7 @@ model Certificate {
 
   @@index([userId])
   @@index([certCode])
+  @@index([courseId])
 }
 
 // ─── Code Playground ────────────────────────────────────────

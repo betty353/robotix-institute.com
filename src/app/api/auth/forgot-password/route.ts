@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createApiResponse, rateLimiter, validateInput } from '@/lib/api-utils';
+import {
+  buildResetPasswordUrl,
+  createPasswordResetToken,
+  getPasswordResetExpiryHours,
+} from '@/lib/password-reset';
+import { sendPasswordResetEmail } from '@/lib/mailer';
 import prisma from '@/lib/prisma';
 
 const schema = z.object({
   email: z.string().email(),
 });
 
-/**
- * Forgot-password endpoint.
- *
- * For security we ALWAYS return 200 success regardless of whether the email
- * exists, to prevent user enumeration. In a future iteration this will:
- *   1. Generate a cryptographically random reset token
- *   2. Store a hash of the token + 1h expiry on the User row
- *   3. Email the user via Resend with a /reset-password?token=... link
- *
- * For now, we just record the request so admins can audit it.
- */
 export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   if (!rateLimiter(ip, 5, 60_000)) {
@@ -40,12 +35,23 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: { email: validation.data!.email },
-      select: { id: true, isActive: true },
+      select: { id: true, firstName: true, isActive: true },
     });
 
     if (user && user.isActive) {
-      // TODO: integrate Resend + create PasswordResetToken model
-      console.info('[forgot-password] reset requested for user', user.id);
+      const { token } = await createPasswordResetToken(user.id);
+      const resetUrl = buildResetPasswordUrl(token);
+
+      try {
+        await sendPasswordResetEmail({
+          to: validation.data!.email,
+          firstName: user.firstName || 'Robotix user',
+          resetUrl,
+          expiresInHours: getPasswordResetExpiryHours(),
+        });
+      } catch (mailError) {
+        console.error('forgot-password email delivery error:', mailError);
+      }
     }
   } catch (e) {
     console.error('forgot-password error:', e);

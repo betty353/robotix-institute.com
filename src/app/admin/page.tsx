@@ -1,462 +1,638 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Bell,
+  Bot,
+  BrainCircuit,
+  Briefcase,
+  Building2,
+  Cpu,
+  Gamepad2,
+  GraduationCap,
+  Newspaper,
+  RadioTower,
+  Search,
+  Settings,
+  Shield,
+  ShoppingBag,
+  Sparkles,
+  Sprout,
+  Trophy,
+  Users,
+  Wifi,
+} from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import AdminContactInbox from '@/components/admin/AdminContactInbox';
 import AdminGameLabQueue from '@/components/admin/AdminGameLabQueue';
-import { Section, GlassCard, Badge, Button, Input, ProgressBar } from '@/components/ui';
-import {
-  LayoutDashboard, Users, BookOpen, ShoppingCart, Trophy, Cpu,
-  TrendingUp, TrendingDown, DollarSign, BarChart3, Activity,
-  Settings, Bell, Search, ChevronRight, MoreVertical,
-  UserPlus, GraduationCap, Package, MessageSquare, Eye, AlertTriangle
-} from 'lucide-react';
+import AdminWeekendLeads from '@/components/admin/AdminWeekendLeads';
+import { Badge, Button, GlassCard, Input, ProgressBar, Section } from '@/components/ui';
+import { useAuthStore } from '@/store';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
-const stats = [
-  { label: 'Total Students', value: '2,547', change: '+12%', trend: 'up', icon: Users, color: 'from-blue-500 to-indigo-500' },
-  { label: 'Active Courses', value: '45', change: '+3', trend: 'up', icon: BookOpen, color: 'from-green-500 to-emerald-500' },
-  { label: 'Revenue (ZMW)', value: 'K 125,400', change: '+18%', trend: 'up', icon: DollarSign, color: 'from-yellow-500 to-orange-500' },
-  { label: 'Competitions', value: '8', change: '+2', trend: 'up', icon: Trophy, color: 'from-purple-500 to-violet-500' },
+type AdminStatsPayload = {
+  stats: {
+    users: {
+      total: number;
+      students: number;
+      instructors: number;
+    };
+    courses: {
+      total: number;
+      enrollments: number;
+    };
+    marketplace: {
+      products: number;
+      orders: number;
+      revenue: number;
+    };
+    competitions: {
+      total: number;
+      active: number;
+    };
+  };
+  recentEnrollments: Array<{
+    enrolledAt: string;
+    user?: { firstName: string; lastName: string } | null;
+    course?: { title: string; slug: string } | null;
+  }>;
+  recentOrders: Array<{
+    id: string;
+    total: number;
+    status: string;
+    createdAt: string;
+    user?: { firstName: string; lastName: string } | null;
+    items?: Array<{ product?: { name: string } | null }>;
+  }>;
+  popularCourses: Array<{
+    title: string;
+    slug: string;
+    enrollmentCount: number;
+  }>;
+};
+
+const tabs = ['Command Center', 'Governance', 'Programs', 'Commerce', 'Game Lab', 'Settings'] as const;
+
+const controlModules = [
+  {
+    title: 'User and identity control',
+    description: 'Manage students, parents, innovators, staff roles, and access to ecosystem capabilities.',
+    icon: Users,
+  },
+  {
+    title: 'School partnership operations',
+    description: 'Activate school dashboards, robotics clubs, event registrations, and performance intelligence.',
+    icon: Building2,
+  },
+  {
+    title: 'AI and content governance',
+    description: 'Moderate Robotix AI usage, newsletters, media publishing, and learning content pipelines.',
+    icon: Bot,
+  },
+  {
+    title: 'IoT and agriculture monitoring',
+    description: 'Track smart farming dashboards, device health, alerts, and live systems across deployments.',
+    icon: Sprout,
+  },
 ];
 
-const recentStudents = [
-  { name: 'Mwila Chanda', email: 'mwila@example.com', enrolled: 'Arduino Robotics', date: '2 hours ago', status: 'active' },
-  { name: 'Thandiwe Mulenga', email: 'thandiwe@example.com', enrolled: 'IoT with ESP32', date: '5 hours ago', status: 'active' },
-  { name: 'Joseph Kabwe', email: 'joseph@example.com', enrolled: 'Python for Robotics', date: '1 day ago', status: 'active' },
-  { name: 'Grace Njovu', email: 'grace@example.com', enrolled: 'AI & Computer Vision', date: '1 day ago', status: 'pending' },
-  { name: 'David Musonda', email: 'david@example.com', enrolled: 'Drone Engineering', date: '2 days ago', status: 'active' },
+const operationsFeed = [
+  'Newsletter automation segment prepared for learners, schools, and founders.',
+  'Community moderation queue synced with discussion, comments, and creator approvals.',
+  'Innovation media pipeline ready for event livestreams, founder stories, and student showcases.',
+  'Realtime dashboard layer tracking IoT sensors, activity streams, and ecosystem engagement.',
 ];
 
-const recentOrders = [
-  { id: '#ORD-2401', customer: 'Mwila C.', items: 'Arduino Starter Kit', total: 'K450', status: 'delivered', date: 'Today' },
-  { id: '#ORD-2400', customer: 'Grace N.', items: 'ESP32 Dev Board ×2', total: 'K170', status: 'shipped', date: 'Yesterday' },
-  { id: '#ORD-2399', customer: 'Thandiwe M.', items: 'Sensor Mega Pack', total: 'K180', status: 'processing', date: 'Yesterday' },
-  { id: '#ORD-2398', customer: 'Joseph K.', items: 'Robotic Arm Kit', total: 'K380', status: 'delivered', date: '2 days ago' },
+const schoolSignals = [
+  { name: 'School onboarding readiness', value: 82 },
+  { name: 'Community moderation health', value: 74 },
+  { name: 'Robotix AI service confidence', value: 91 },
+  { name: 'AgriTech sensor visibility', value: 68 },
 ];
 
-const coursePerformance = [
-  { name: 'Arduino Robotics Fundamentals', students: 340, completion: 78, revenue: 'K51,000', rating: 4.8 },
-  { name: 'IoT with ESP32 & MQTT', students: 245, completion: 72, revenue: 'K36,750', rating: 4.7 },
-  { name: 'Python for Robotics', students: 312, completion: 65, revenue: 'K28,080', rating: 4.6 },
-  { name: 'AI & Computer Vision', students: 128, completion: 45, revenue: 'K25,600', rating: 4.9 },
+const systemAlerts = [
+  { title: 'Innovation media schedule', detail: 'Three ecosystem stories queued for publication today.', tone: 'cyan' },
+  { title: 'Partnership pipeline', detail: 'Two schools are ready for dashboard activation and robotics club onboarding.', tone: 'violet' },
+  { title: 'Competition operations', detail: 'Challenge submissions are flowing into moderation and review panels.', tone: 'emerald' },
 ];
 
-const alerts = [
-  { type: 'warning', text: 'ESP32 Dev Board stock running low (5 remaining)', time: '1h ago' },
-  { type: 'info', text: 'New competition submission from Team Innovate', time: '3h ago' },
-  { type: 'success', text: '12 new students enrolled today', time: '5h ago' },
-];
+const fallbackData: AdminStatsPayload = {
+  stats: {
+    users: { total: 2840, students: 2230, instructors: 56 },
+    courses: { total: 48, enrollments: 3920 },
+    marketplace: { products: 126, orders: 184, revenue: 384200 },
+    competitions: { total: 12, active: 4 },
+  },
+  recentEnrollments: [
+    {
+      enrolledAt: new Date().toISOString(),
+      user: { firstName: 'Chelstone', lastName: 'STEM Club' },
+      course: { title: 'Robotix Academy Launch Path', slug: 'robotix-academy-launch-path' },
+    },
+    {
+      enrolledAt: new Date(Date.now() - 86_400_000).toISOString(),
+      user: { firstName: 'Makeni', lastName: 'Innovation Lab' },
+      course: { title: 'AI and Robotics Foundations', slug: 'ai-robotics-foundations' },
+    },
+    {
+      enrolledAt: new Date(Date.now() - 172_800_000).toISOString(),
+      user: { firstName: 'Copperbelt', lastName: 'Builder Circle' },
+      course: { title: 'IoT Systems for Smart Agriculture', slug: 'iot-systems-smart-agriculture' },
+    },
+  ],
+  recentOrders: [
+    {
+      id: 'ec-2401',
+      total: 5400,
+      status: 'processing',
+      createdAt: new Date().toISOString(),
+      user: { firstName: 'Prototype', lastName: 'Lab' },
+      items: [{ product: { name: 'Robotics starter kits' } }],
+    },
+    {
+      id: 'ec-2400',
+      total: 2800,
+      status: 'shipped',
+      createdAt: new Date(Date.now() - 86_400_000).toISOString(),
+      user: { firstName: 'AgriTech', lastName: 'Pilot' },
+      items: [{ product: { name: 'Soil and climate sensor bundle' } }],
+    },
+    {
+      id: 'ec-2399',
+      total: 1900,
+      status: 'delivered',
+      createdAt: new Date(Date.now() - 172_800_000).toISOString(),
+      user: { firstName: 'Drone', lastName: 'Builders' },
+      items: [{ product: { name: 'ESP32 and navigation pack' } }],
+    },
+  ],
+  popularCourses: [
+    { title: 'AI and Robotics Foundations', slug: 'ai-robotics-foundations', enrollmentCount: 640 },
+    { title: 'Smart Agriculture Systems', slug: 'smart-agriculture-systems', enrollmentCount: 472 },
+    { title: 'Robotix Builder Lab', slug: 'robotix-builder-lab', enrollmentCount: 389 },
+  ],
+};
 
-const adminTabs = ['Overview', 'Users', 'Courses', 'Orders', 'Game Lab', 'Settings'];
+function initials(name?: string | null, surname?: string | null) {
+  return `${name?.charAt(0) || 'R'}${surname?.charAt(0) || 'I'}`.toUpperCase();
+}
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('Overview');
+  const token = useAuthStore((state) => state.token);
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Command Center');
+  const [payload, setPayload] = useState<AdminStatsPayload>(fallbackData);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    const loadStats = async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch('/api/admin/stats', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await response.json();
+        if (!response.ok) {
+          throw new Error(json?.message || 'Admin analytics could not be loaded.');
+        }
+        if (!cancelled && json?.data) {
+          setPayload(json.data as AdminStatsPayload);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'Admin analytics could not be loaded.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadStats();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const statCards = useMemo(
+    () => [
+      {
+        label: 'Ecosystem users',
+        value: payload.stats.users.total.toLocaleString(),
+        detail: `${payload.stats.users.students.toLocaleString()} students active in the network`,
+        icon: Users,
+      },
+      {
+        label: 'Learning flow',
+        value: payload.stats.courses.enrollments.toLocaleString(),
+        detail: `${payload.stats.courses.total} courses and pathways live`,
+        icon: GraduationCap,
+      },
+      {
+        label: 'Commerce + hardware',
+        value: formatCurrency(payload.stats.marketplace.revenue),
+        detail: `${payload.stats.marketplace.orders} marketplace orders processed`,
+        icon: ShoppingBag,
+      },
+      {
+        label: 'Competition system',
+        value: payload.stats.competitions.active.toString(),
+        detail: `${payload.stats.competitions.total} total competitions tracked`,
+        icon: Trophy,
+      },
+    ],
+    [payload]
+  );
 
   return (
-    <main className="bg-brand-dark min-h-screen">
+    <main className="min-h-screen bg-brand-dark text-white">
       <Navbar />
 
-      {/* Header */}
-      <section className="pt-24 pb-6 border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <section className="relative overflow-hidden border-b border-white/10 pt-28">
+        <div className="aurora-bg absolute inset-0 opacity-80" />
+        <div className="bg-grid absolute inset-0 opacity-10" />
+        <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <LayoutDashboard className="w-5 h-5 text-brand-accent" />
-                <h1 className="font-heading text-2xl font-bold text-white">Admin Dashboard</h1>
-              </div>
-              <p className="text-sm text-white/40">Manage your Robotics Institute platform</p>
+              <Badge variant="accent" className="mb-4">
+                <Shield className="mr-1 h-3 w-3" />
+                Admin Super Dashboard
+              </Badge>
+              <h1 className="font-heading text-4xl font-bold sm:text-5xl">
+                Command the Robotix ecosystem like a living innovation grid.
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg text-white/65">
+                This control surface is built for governance across users, schools, courses, gaming, media, community, partnerships, AI tooling, agriculture systems, and realtime operations.
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="max-w-xs">
-                <Input placeholder="Search..." icon={<Search className="w-4 h-4" />} />
+
+            <GlassCard className="p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Operations state</p>
+                  <h2 className="mt-2 font-heading text-2xl font-semibold">Ecosystem command layer</h2>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
+                  <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                  Live
+                </div>
               </div>
-              <button className="relative p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-brand-dark" />
-              </button>
-              <button className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10">
-                <Settings className="w-5 h-5" />
-              </button>
-            </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: 'Realtime metrics', value: loading ? 'Syncing' : 'Online' },
+                  { label: 'AI governance', value: 'Active' },
+                  { label: 'Community moderation', value: 'Screening' },
+                  { label: 'School rollout', value: 'Ready' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="text-xs uppercase tracking-[0.24em] text-white/40">{item.label}</div>
+                    <div className="mt-3 text-lg font-semibold">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mt-6">
-            {adminTabs.map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
-                  activeTab === tab
-                    ? 'bg-white/5 text-brand-accent border-b-2 border-brand-accent'
-                    : 'text-white/40 hover:text-white/60'
-                }`}
-              >{tab}</button>
-            ))}
+          <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                    activeTab === tab
+                      ? 'bg-brand-accent text-brand-dark shadow-glow-accent'
+                      : 'border border-white/10 bg-white/[0.03] text-white/65 hover:border-brand-accent/25 hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full sm:w-64">
+                <Input placeholder="Search systems, schools, creators..." icon={<Search className="h-4 w-4" />} />
+              </div>
+              <button className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
+                <Bell className="h-5 w-5" />
+              </button>
+              <button className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
+                <Settings className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      {activeTab === 'Overview' && (
+      {activeTab === 'Command Center' && (
         <>
-          {/* Stats Cards */}
-          <Section className="py-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((stat, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                  <GlassCard className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                        <stat.icon className="w-5 h-5 text-white" />
+          <Section className="py-8">
+            <div className="grid gap-4 lg:grid-cols-4">
+              {statCards.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.06 }}
+                >
+                  <GlassCard className="h-full p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="rounded-2xl bg-brand-accent/10 p-3 text-brand-accent">
+                        <stat.icon className="h-5 w-5" />
                       </div>
-                      <div className={`flex items-center gap-1 text-xs font-medium ${stat.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                        {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {stat.change}
-                      </div>
+                      <Badge variant="primary" className="text-[10px] uppercase tracking-[0.2em]">
+                        Live
+                      </Badge>
                     </div>
-                    <p className="text-2xl font-bold text-white">{stat.value}</p>
-                    <p className="text-xs text-white/40 mt-1">{stat.label}</p>
+                    <div className="mt-5 text-3xl font-bold">{stat.value}</div>
+                    <div className="mt-2 text-sm font-medium text-white/80">{stat.label}</div>
+                    <div className="mt-3 text-sm leading-6 text-white/50">{stat.detail}</div>
                   </GlassCard>
                 </motion.div>
               ))}
             </div>
+            {loadError && (
+              <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+                Live admin analytics could not be loaded, so the dashboard is showing a curated ecosystem preview instead.
+              </div>
+            )}
           </Section>
 
-          {/* Main content grid */}
           <Section className="py-4">
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Recent Students */}
-              <div className="lg:col-span-2">
-                <GlassCard className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading font-semibold text-white flex items-center gap-2">
-                      <UserPlus className="w-4 h-4 text-brand-accent" /> Recent Enrollments
-                    </h3>
-                    <Button variant="ghost" size="sm">View All <ChevronRight className="w-3 h-3 ml-1" /></Button>
+            <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+              <GlassCard className="p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Realtime intelligence</p>
+                    <h3 className="mt-2 font-heading text-2xl font-semibold">The ecosystem is built to be operated, not merely displayed.</h3>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-white/10">
-                          <th className="text-left text-xs font-medium text-white/30 pb-3">Student</th>
-                          <th className="text-left text-xs font-medium text-white/30 pb-3">Course</th>
-                          <th className="text-left text-xs font-medium text-white/30 pb-3">Status</th>
-                          <th className="text-left text-xs font-medium text-white/30 pb-3">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {recentStudents.map((s, i) => (
-                          <tr key={i} className="hover:bg-white/5 transition-colors">
-                            <td className="py-3">
-                              <div>
-                                <p className="text-sm font-medium text-white">{s.name}</p>
-                                <p className="text-xs text-white/30">{s.email}</p>
-                              </div>
-                            </td>
-                            <td className="py-3 text-sm text-white/60">{s.enrolled}</td>
-                            <td className="py-3">
-                              <Badge variant={s.status === 'active' ? 'primary' : 'accent'}>{s.status}</Badge>
-                            </td>
-                            <td className="py-3 text-xs text-white/30">{s.date}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </GlassCard>
-              </div>
+                  <BarChart3 className="h-6 w-6 text-brand-accent" />
+                </div>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {operationsFeed.map((item, index) => (
+                    <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                      <div className="text-xs uppercase tracking-[0.2em] text-white/35">Signal 0{index + 1}</div>
+                      <p className="mt-3 text-sm leading-6 text-white/68">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
 
-              {/* Alerts Sidebar */}
+              <GlassCard className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Control modules</p>
+                    <h3 className="mt-2 font-heading text-2xl font-semibold">Key governance surfaces</h3>
+                  </div>
+                  <BrainCircuit className="h-6 w-6 text-brand-accent" />
+                </div>
+                <div className="mt-6 space-y-3">
+                  {controlModules.map((module) => (
+                    <div key={module.title} className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-xl bg-brand-accent/10 p-2 text-brand-accent">
+                          <module.icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-white">{module.title}</h4>
+                          <p className="mt-2 text-sm leading-6 text-white/58">{module.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+            </div>
+          </Section>
+
+          <Section className="py-4">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <GlassCard className="lg:col-span-2 p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Recent activations</p>
+                    <h3 className="mt-2 font-heading text-2xl font-semibold">Learning, marketplace, and ecosystem activity</h3>
+                  </div>
+                  <Activity className="h-6 w-6 text-brand-accent" />
+                </div>
+                <div className="mt-6 grid gap-6 md:grid-cols-2">
+                  <div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-white">Recent enrollments</h4>
+                      <Link href="/courses" className="text-sm text-brand-accent hover:text-brand-accent-light">
+                        Open academy
+                      </Link>
+                    </div>
+                    <div className="space-y-3">
+                      {payload.recentEnrollments.map((item, index) => (
+                        <div key={`${item.course?.slug || 'course'}-${index}`} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent text-xs font-bold">
+                              {initials(item.user?.firstName, item.user?.lastName)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-semibold text-white">
+                                {[item.user?.firstName, item.user?.lastName].filter(Boolean).join(' ') || 'Robotix learner'}
+                              </div>
+                              <div className="truncate text-xs text-white/45">{item.course?.title || 'Robotix course'}</div>
+                            </div>
+                          </div>
+                          <div className="mt-3 text-xs text-white/35">{formatDate(item.enrolledAt)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-white">Marketplace flow</h4>
+                      <Link href="/marketplace" className="text-sm text-brand-accent hover:text-brand-accent-light">
+                        Open commerce
+                      </Link>
+                    </div>
+                    <div className="space-y-3">
+                      {payload.recentOrders.map((order) => (
+                        <div key={order.id} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold text-white">#{order.id.slice(-6).toUpperCase()}</div>
+                              <div className="text-xs text-white/45">
+                                {[order.user?.firstName, order.user?.lastName].filter(Boolean).join(' ') || 'Robotix order'}
+                              </div>
+                            </div>
+                            <Badge variant={order.status === 'delivered' ? 'primary' : order.status === 'shipped' ? 'accent' : 'success'}>
+                              {order.status}
+                            </Badge>
+                          </div>
+                          <div className="mt-3 text-sm text-white/68">
+                            {order.items?.[0]?.product?.name || 'Marketplace bundle'}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between text-xs text-white/35">
+                            <span>{formatCurrency(order.total)}</span>
+                            <span>{formatDate(order.createdAt)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+
               <div className="space-y-6">
                 <GlassCard className="p-6">
-                  <h3 className="font-heading font-semibold text-white mb-4 flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-brand-accent" /> Alerts
-                  </h3>
-                  <div className="space-y-3">
-                    {alerts.map((alert, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/5">
-                        <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${
-                          alert.type === 'warning' ? 'text-yellow-400' : alert.type === 'success' ? 'text-green-400' : 'text-blue-400'
-                        }`} />
-                        <div>
-                          <p className="text-xs text-white/60">{alert.text}</p>
-                          <p className="text-[10px] text-white/20 mt-1">{alert.time}</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Signals</p>
+                      <h3 className="mt-2 font-heading text-xl font-semibold">Health across key layers</h3>
+                    </div>
+                    <Wifi className="h-5 w-5 text-brand-accent" />
+                  </div>
+                  <div className="mt-5 space-y-4">
+                    {schoolSignals.map((signal) => (
+                      <div key={signal.name}>
+                        <div className="mb-2 flex items-center justify-between text-xs text-white/55">
+                          <span>{signal.name}</span>
+                          <span>{signal.value}%</span>
                         </div>
+                        <ProgressBar value={signal.value} />
                       </div>
                     ))}
                   </div>
                 </GlassCard>
 
-                {/* Quick Stats */}
                 <GlassCard className="p-6">
-                  <h3 className="font-heading font-semibold text-white mb-4 flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-brand-accent" /> Quick Stats
-                  </h3>
-                  <div className="space-y-4">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-white/50">Server Load</span>
-                        <span className="text-white/30">34%</span>
-                      </div>
-                      <ProgressBar value={34} />
+                      <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Priority alerts</p>
+                      <h3 className="mt-2 font-heading text-xl font-semibold">What needs attention</h3>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-white/50">Storage Used</span>
-                        <span className="text-white/30">67%</span>
+                    <RadioTower className="h-5 w-5 text-brand-accent" />
+                  </div>
+                  <div className="mt-5 space-y-3">
+                    {systemAlerts.map((alert) => (
+                      <div key={alert.title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                        <div className="text-sm font-semibold text-white">{alert.title}</div>
+                        <div className="mt-2 text-sm leading-6 text-white/58">{alert.detail}</div>
                       </div>
-                      <ProgressBar value={67} />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-white/50">Active Users (now)</span>
-                        <span className="text-white/30">142</span>
-                      </div>
-                      <ProgressBar value={28} />
-                    </div>
+                    ))}
                   </div>
                 </GlassCard>
               </div>
             </div>
           </Section>
-
-          {/* Course Performance + Recent Orders */}
-          <Section className="py-6 pb-12">
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Course Performance */}
-              <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-brand-accent" /> Course Performance
-                  </h3>
-                </div>
-                <div className="space-y-4">
-                  {coursePerformance.map((course, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-white/5">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="text-sm font-medium text-white">{course.name}</h4>
-                        <div className="flex items-center gap-1 text-brand-accent text-xs">
-                          ★ {course.rating}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-white/30 mb-2">
-                        <span>{course.students} students</span>
-                        <span>{course.revenue}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ProgressBar value={course.completion} />
-                        <span className="text-xs text-white/30 shrink-0">{course.completion}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </GlassCard>
-
-              {/* Recent Orders */}
-              <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-heading font-semibold text-white flex items-center gap-2">
-                    <Package className="w-4 h-4 text-brand-accent" /> Recent Orders
-                  </h3>
-                  <Button variant="ghost" size="sm">View All <ChevronRight className="w-3 h-3 ml-1" /></Button>
-                </div>
-                <div className="space-y-3">
-                  {recentOrders.map((order, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-white/5">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-white">{order.id}</p>
-                          <Badge variant={
-                            order.status === 'delivered' ? 'primary' :
-                            order.status === 'shipped' ? 'accent' : 'danger'
-                          } className="text-[10px]">{order.status}</Badge>
-                        </div>
-                        <p className="text-xs text-white/40 mt-0.5">{order.customer} — {order.items}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-white">{order.total}</p>
-                        <p className="text-[10px] text-white/30">{order.date}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </GlassCard>
-            </div>
-          </Section>
         </>
       )}
 
-      {activeTab === 'Users' && (
+      {activeTab === 'Governance' && (
         <Section className="py-8">
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-heading text-lg font-semibold text-white">User Management</h3>
-              <div className="flex items-center gap-3">
-                <Input placeholder="Search users..." icon={<Search className="w-4 h-4" />} />
-                <Button size="sm"><UserPlus className="w-4 h-4 mr-1" /> Add User</Button>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Name</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Email</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Role</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Courses</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Status</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {[
-                    { name: 'Mwila Chanda', email: 'mwila@example.com', role: 'Student', courses: 4, status: 'active' },
-                    { name: 'Dr. Bwalya Mutale', email: 'bwalya@example.com', role: 'Instructor', courses: 3, status: 'active' },
-                    { name: 'Thandiwe Mulenga', email: 'thandiwe@example.com', role: 'Student', courses: 2, status: 'active' },
-                    { name: 'Admin User', email: 'admin@robotix.zm', role: 'Admin', courses: 0, status: 'active' },
-                    { name: 'Grace Njovu', email: 'grace@example.com', role: 'Student', courses: 1, status: 'pending' },
-                  ].map((u, i) => (
-                    <tr key={i} className="hover:bg-white/5 transition-colors">
-                      <td className="py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-[10px] font-bold text-white">
-                            {u.name.split(' ').map(n => n[0]).join('')}
-                          </div>
-                          <span className="text-sm font-medium text-white">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-sm text-white/40">{u.email}</td>
-                      <td className="py-3">
-                        <Badge variant={u.role === 'Admin' ? 'accent' : u.role === 'Instructor' ? 'primary' : 'primary'}>
-                          {u.role}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-sm text-white/50">{u.courses}</td>
-                      <td className="py-3">
-                        <Badge variant={u.status === 'active' ? 'primary' : 'accent'}>{u.status}</Badge>
-                      </td>
-                      <td className="py-3">
-                        <button className="text-white/30 hover:text-white"><MoreVertical className="w-4 h-4" /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
-        </Section>
-      )}
-
-      {activeTab === 'Courses' && (
-        <Section className="py-8">
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-heading text-lg font-semibold text-white">Course Management</h3>
-              <Button size="sm"><Plus className="w-4 h-4 mr-1" /> Create Course</Button>
-            </div>
-            <div className="space-y-4">
-              {coursePerformance.map((course, i) => (
-                <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-white/5">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-semibold text-white">{course.name}</h4>
-                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-white/30">
-                      <span>{course.students} students</span>
-                      <span>★ {course.rating}</span>
-                      <span>{course.revenue}</span>
-                    </div>
+          <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  title: 'User governance',
+                  text: 'Identity, roles, parent visibility, student protection, and creator moderation logic.',
+                  icon: Users,
+                },
+                {
+                  title: 'School rollout',
+                  text: 'Partnership onboarding, dashboard access, robotics clubs, resources, and communications.',
+                  icon: Building2,
+                },
+                {
+                  title: 'Community safety',
+                  text: 'Thread approvals, comment moderation, trending discussions, and reporting workflows.',
+                  icon: Shield,
+                },
+                {
+                  title: 'Media publishing',
+                  text: 'News, newsletters, podcasts, event streaming, and ecosystem storytelling controls.',
+                  icon: Newspaper,
+                },
+              ].map((item) => (
+                <GlassCard key={item.title} className="p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-accent/10 text-brand-accent">
+                    <item.icon className="h-6 w-6" />
                   </div>
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="flex-1 sm:w-32">
-                      <ProgressBar value={course.completion} />
-                    </div>
-                    <span className="text-xs text-white/30">{course.completion}%</span>
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </div>
-                </div>
+                  <h3 className="font-heading text-xl font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/62">{item.text}</p>
+                </GlassCard>
               ))}
             </div>
-          </GlassCard>
+
+            <AdminContactInbox />
+            <AdminWeekendLeads />
+          </div>
         </Section>
       )}
 
-      {activeTab === 'Orders' && (
+      {activeTab === 'Programs' && (
         <Section className="py-8">
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-heading text-lg font-semibold text-white">Order Management</h3>
-              <Input placeholder="Search orders..." icon={<Search className="w-4 h-4" />} />
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Order ID</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Customer</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Items</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Total</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Status</th>
-                    <th className="text-left text-xs font-medium text-white/30 pb-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {recentOrders.map((o, i) => (
-                    <tr key={i} className="hover:bg-white/5 transition-colors">
-                      <td className="py-3 text-sm font-medium text-white">{o.id}</td>
-                      <td className="py-3 text-sm text-white/50">{o.customer}</td>
-                      <td className="py-3 text-sm text-white/50">{o.items}</td>
-                      <td className="py-3 text-sm font-bold text-white">{o.total}</td>
-                      <td className="py-3">
-                        <Badge variant={o.status === 'delivered' ? 'primary' : o.status === 'shipped' ? 'accent' : 'danger'}>
-                          {o.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-xs text-white/30">{o.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {[
+              { title: 'Robotix Academy', metric: `${payload.stats.courses.total} active learning modules`, icon: GraduationCap },
+              { title: 'AI Builder Platform', metric: 'Templates for apps, chatbots, and automations', icon: Bot },
+              { title: 'Game and simulation layer', metric: 'Interactive labs and challenge environments', icon: Gamepad2 },
+              { title: 'AgriTech systems', metric: 'Smart farming dashboards and connected field intelligence', icon: Sprout },
+              { title: 'Innovation hub', metric: 'Founder pathways, ventures, and prototype readiness', icon: Briefcase },
+              { title: 'Research and hardware', metric: `${payload.stats.marketplace.products} product and kit surfaces`, icon: Cpu },
+            ].map((item) => (
+              <GlassCard key={item.title} hover className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="rounded-2xl bg-brand-accent/10 p-3 text-brand-accent">
+                    <item.icon className="h-6 w-6" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-white/25" />
+                </div>
+                <h3 className="mt-5 font-heading text-xl font-semibold">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-white/62">{item.metric}</p>
+              </GlassCard>
+            ))}
+          </div>
         </Section>
       )}
 
-      {activeTab === 'Settings' && (
+      {activeTab === 'Commerce' && (
         <Section className="py-8">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
             <GlassCard className="p-6">
-              <h3 className="font-heading font-semibold text-white mb-4">Platform Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Institute Name</label>
-                  <Input defaultValue="Robotix Institute Zambia" />
+              <div className="flex items-center justify-between">
+                <h3 className="font-heading text-2xl font-semibold">Marketplace intelligence</h3>
+                <ShoppingBag className="h-6 w-6 text-brand-accent" />
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+                  <div className="text-xs uppercase tracking-[0.24em] text-white/40">Revenue</div>
+                  <div className="mt-3 text-3xl font-bold">{formatCurrency(payload.stats.marketplace.revenue)}</div>
                 </div>
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Contact Email</label>
-                  <Input defaultValue="info@robotix.zm" />
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+                  <div className="text-xs uppercase tracking-[0.24em] text-white/40">Orders</div>
+                  <div className="mt-3 text-3xl font-bold">{payload.stats.marketplace.orders}</div>
                 </div>
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Support Phone</label>
-                  <Input defaultValue="+260 97 1234567" />
-                </div>
-                <Button>Save Changes</Button>
               </div>
             </GlassCard>
+
             <GlassCard className="p-6">
-              <h3 className="font-heading font-semibold text-white mb-4">Notifications</h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'New enrollment alerts', enabled: true },
-                  { label: 'Order notifications', enabled: true },
-                  { label: 'Low stock warnings', enabled: true },
-                  { label: 'Competition submissions', enabled: false },
-                  { label: 'Forum reports', enabled: true },
-                ].map((n, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <span className="text-sm text-white/60">{n.label}</span>
-                    <button className={`w-10 h-6 rounded-full transition-colors ${n.enabled ? 'bg-brand-accent' : 'bg-white/10'}`}>
-                      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${n.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                    </button>
+              <div className="flex items-center justify-between">
+                <h3 className="font-heading text-2xl font-semibold">Popular learning demand</h3>
+                <GraduationCap className="h-6 w-6 text-brand-accent" />
+              </div>
+              <div className="mt-6 space-y-3">
+                {payload.popularCourses.map((course) => (
+                  <div key={course.slug} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="text-sm font-semibold text-white">{course.title}</div>
+                    <div className="mt-2 text-sm text-white/55">{course.enrollmentCount} enrollments</div>
                   </div>
                 ))}
               </div>
@@ -465,15 +641,61 @@ export default function AdminPage() {
         </Section>
       )}
 
-      {activeTab === 'Game Lab' && <AdminGameLabQueue />}
+      {activeTab === 'Game Lab' && (
+        <Section className="py-8">
+          <div className="mb-6 max-w-3xl">
+            <Badge variant="accent" className="mb-4">
+              <Gamepad2 className="mr-1 h-3 w-3" />
+              STEM Game Zone Moderation
+            </Badge>
+            <h2 className="section-title">Review what young builders are creating before it goes live.</h2>
+            <p className="section-subtitle mt-4">
+              This queue acts as the quality and safety gate for game-based learning projects, challenge content, and playable innovation experiments.
+            </p>
+          </div>
+          <AdminGameLabQueue />
+        </Section>
+      )}
+
+      {activeTab === 'Settings' && (
+        <Section className="py-8">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <GlassCard className="p-6">
+              <h3 className="font-heading text-2xl font-semibold">Ecosystem settings</h3>
+              <div className="mt-6 space-y-4">
+                <Input defaultValue="Robotix Institute Zambia" />
+                <Input defaultValue="ecosystem@robotix.zm" />
+                <Input defaultValue="+260 97X XXX XXX" />
+                <Button variant="primary" icon={<ArrowRight className="h-4 w-4" />}>
+                  Save ecosystem configuration
+                </Button>
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-6">
+              <h3 className="font-heading text-2xl font-semibold">Automation switches</h3>
+              <div className="mt-6 space-y-3">
+                {[
+                  'Realtime dashboard alerts',
+                  'Newsletter automation',
+                  'Community moderation escalation',
+                  'School onboarding notifications',
+                  'AI tool governance logging',
+                ].map((item, index) => (
+                  <div key={item} className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                    <span className="text-sm text-white/68">{item}</span>
+                    <div className={`h-6 w-11 rounded-full p-1 ${index !== 3 ? 'bg-brand-accent' : 'bg-white/10'}`}>
+                      <div className={`h-4 w-4 rounded-full bg-white ${index !== 3 ? 'translate-x-5' : 'translate-x-0'} transition-transform`} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </div>
+        </Section>
+      )}
 
       <Footer />
     </main>
-  );
-}
-
-function Plus(props: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   );
 }

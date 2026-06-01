@@ -19,6 +19,9 @@ const SIGNATURES: { mime: string; ext: string; magic: number[][] }[] = [
   { mime: 'image/jpeg', ext: '.jpg',  magic: [[0xff, 0xd8, 0xff]] },
   { mime: 'image/webp', ext: '.webp', magic: [[0x52, 0x49, 0x46, 0x46]] }, // RIFF (further check below)
   { mime: 'image/gif',  ext: '.gif',  magic: [[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]] },
+  { mime: 'audio/mpeg', ext: '.mp3',  magic: [[0x49, 0x44, 0x33], [0xff, 0xfb], [0xff, 0xf3], [0xff, 0xf2]] },
+  { mime: 'audio/wav',  ext: '.wav',  magic: [[0x52, 0x49, 0x46, 0x46]] }, // RIFF (further check below)
+  { mime: 'audio/ogg',  ext: '.ogg',  magic: [[0x4f, 0x67, 0x67, 0x53]] },
   { mime: 'application/pdf', ext: '.pdf', magic: [[0x25, 0x50, 0x44, 0x46, 0x2d]] },
 ];
 
@@ -30,12 +33,19 @@ function detectKind(buf: Buffer) {
         if (buf[i] !== m[i]) { ok = false; break; }
       }
       if (!ok) continue;
-      // For WEBP: bytes 8-11 must be "WEBP"
+      // For WEBP / WAV: bytes 8-11 must confirm the RIFF subtype
       if (sig.mime === 'image/webp') {
         if (buf.length < 12) continue;
         if (
           buf[8] !== 0x57 || buf[9] !== 0x45 ||
           buf[10] !== 0x42 || buf[11] !== 0x50
+        ) continue;
+      }
+      if (sig.mime === 'audio/wav') {
+        if (buf.length < 12) continue;
+        if (
+          buf[8] !== 0x57 || buf[9] !== 0x41 ||
+          buf[10] !== 0x56 || buf[11] !== 0x45
         ) continue;
       }
       return sig;
@@ -72,7 +82,7 @@ export async function POST(request: NextRequest) {
     const detected = detectKind(buffer);
     if (!detected) {
       return NextResponse.json(
-        createErrorResponse('Unsupported file type. Allowed: PNG, JPEG, WebP, GIF, PDF.'),
+        createErrorResponse('Unsupported file type. Allowed: PNG, JPEG, WebP, GIF, MP3, WAV, OGG, PDF.'),
         { status: 415 }
       );
     }

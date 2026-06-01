@@ -30,7 +30,7 @@ const PHASER_CDN =
  * }));
  * ```
  */
-export function buildGameLabHtml(studentCodeRaw: string): string {
+export function buildGameLabHtml(studentCodeRaw: string, previewSceneId?: string | null): string {
   const studentCode = sanitiseEmbeddedScript(studentCodeRaw.trim());
 
   const styles =
@@ -56,6 +56,7 @@ export function buildGameLabHtml(studentCodeRaw: string): string {
 
   /** Call once — passes global Phaser so your factory can extend built-ins cleanly. */
   window.RobotixPhaser = {};
+  window.__ROBOTIX_PREVIEW_SCENE_ID = ${previewSceneId ? JSON.stringify(previewSceneId) : 'null'};
 
   RobotixPhaser.start = function(factory) {
     var errEl = document.getElementById('student-error');

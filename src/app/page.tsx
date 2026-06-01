@@ -1,23 +1,29 @@
 'use client';
 
 import { Suspense } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  GraduationCap, Code, Cpu, Gamepad2, Trophy, Store, Users,
-  Bot, ArrowRight, Zap, Globe, Award, BookOpen, Wifi, Rocket,
-  Star, ChevronRight, Play, CircuitBoard
+  ArrowRight,
+  BookOpen,
+  Building2,
+  Cpu,
+  Gamepad2,
+  GraduationCap,
+  HeartHandshake,
+  Instagram,
+  Mail,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import {
-  Section, SectionHeader, GlassCard, Badge, Button,
-  StatCard, ProgressBar
-} from '@/components/ui';
-import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
-import { TiltCard } from '@/components/ui/TiltCard';
+import { PlayVerseShowcase } from '@/components/game/PlayVerseShowcase';
+import { Badge, Button, GlassCard, Section } from '@/components/ui';
+import { robotixProfile } from '@/lib/robotix-profile';
 import { HeroSceneErrorBoundary } from '@/components/three/HeroSceneErrorBoundary';
 
 const HeroScene = dynamic(() => import('@/components/three/HeroScene'), {
@@ -25,531 +31,459 @@ const HeroScene = dynamic(() => import('@/components/three/HeroScene'), {
   loading: () => <div className="absolute inset-0 bg-brand-dark" />,
 });
 
-// ─── Animation variants ─────────────────────────────────────
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0 },
 };
 
 const stagger = {
+  hidden: {},
   visible: {
-    transition: { staggerChildren: 0.1 },
+    transition: {
+      staggerChildren: 0.08,
+    },
   },
 };
 
-// ─── Data ───────────────────────────────────────────────────
-const stats = [
-  { value: 2500, suffix: '+', label: 'Active Students', icon: <Users className="w-6 h-6" /> },
-  { value: 120, suffix: '+', label: 'Robot Projects', icon: <Cpu className="w-6 h-6" /> },
-  { value: 45, suffix: '+', label: 'Expert Courses', icon: <GraduationCap className="w-6 h-6" /> },
-  { value: 15, suffix: '+', label: 'Competitions Won', icon: <Trophy className="w-6 h-6" /> },
-];
+const audiences = ['Students', 'Parents', 'Schools', 'Partners'];
 
-const featuredCourses = [
+const accessRoutes = [
   {
-    title: 'Robotics Fundamentals',
-    description: 'Master the core foundations of robotics — from mechanics to electronics and programming.',
-    level: 'Beginner',
-    duration: '24 hours',
-    icon: <Cpu className="w-8 h-8" />,
-    color: 'from-blue-500/20 to-purple-500/20',
+    title: 'Weekend classes',
+    description: 'A clear parent route for weekend robotics and coding enquiries.',
+    href: '/weekend-classes',
+    icon: GraduationCap,
   },
   {
-    title: 'Arduino Robotics',
-    description: 'Build intelligent robots using Arduino microcontrollers with hands-on projects.',
-    level: 'Intermediate',
-    duration: '32 hours',
-    icon: <CircuitBoard className="w-8 h-8" />,
-    color: 'from-green-500/20 to-teal-500/20',
+    title: 'Courses and pathways',
+    description: 'Structured learning journeys for students who want guided skill growth.',
+    href: '/courses',
+    icon: BookOpen,
   },
   {
-    title: 'ESP32 IoT Systems',
-    description: 'Connect robots to the internet and build smart IoT solutions with ESP32.',
-    level: 'Intermediate',
-    duration: '28 hours',
-    icon: <Wifi className="w-8 h-8" />,
-    color: 'from-orange-500/20 to-yellow-500/20',
+    title: 'School partnerships',
+    description: 'A direct entry point for schools, clubs, and institutional programs.',
+    href: '/partners',
+    icon: Building2,
   },
   {
-    title: 'AI Robotics',
-    description: 'Integrate machine learning and computer vision into robotic systems.',
-    level: 'Advanced',
-    duration: '40 hours',
-    icon: <Bot className="w-8 h-8" />,
-    color: 'from-pink-500/20 to-rose-500/20',
-  },
-  {
-    title: 'Drone Programming',
-    description: 'Program autonomous drones for navigation, mapping, and aerial missions.',
-    level: 'Advanced',
-    duration: '36 hours',
-    icon: <Rocket className="w-8 h-8" />,
-    color: 'from-cyan-500/20 to-blue-500/20',
-  },
-  {
-    title: 'Smart Agriculture',
-    description: 'Automate farming with robotics, sensors, and data-driven irrigation systems.',
-    level: 'Intermediate',
-    duration: '30 hours',
-    icon: <Zap className="w-8 h-8" />,
-    color: 'from-emerald-500/20 to-green-500/20',
+    title: 'Projects and showcases',
+    description: 'Real student work, public builds, and visible outcomes from Robotix programs.',
+    href: '/projects',
+    icon: Cpu,
   },
 ];
 
-const platformFeatures = [
-  {
-    icon: <Code className="w-6 h-6" />,
-    title: 'Coder Play Station',
-    description: 'Write and run code in Python, JavaScript, C++, Arduino & MicroPython right in your browser.',
-    href: '/playground',
-  },
-  {
-    icon: <Cpu className="w-6 h-6" />,
-    title: 'Simulation Lab',
-    description: '3D robot simulation environment to test movements, sensors, and obstacle avoidance.',
-    href: '/simulation',
-  },
-  {
-    icon: <Gamepad2 className="w-6 h-6" />,
-    title: 'Game Arena',
-    description: 'Compete in Robot Maze, Line Follower, Drone Navigation, and Robot Soccer challenges.',
-    href: '/arena',
-  },
-  {
-    icon: <Wifi className="w-6 h-6" />,
-    title: 'IoT Control Center',
-    description: 'Control real ESP32 robots remotely — view sensor data, cameras, and send commands.',
-    href: '/iot',
-  },
-  {
-    icon: <Trophy className="w-6 h-6" />,
-    title: 'Competitions',
-    description: 'Join national robotics competitions with team registration, judging, and leaderboards.',
-    href: '/competitions',
-  },
-  {
-    icon: <Store className="w-6 h-6" />,
-    title: 'Marketplace',
-    description: 'Shop Arduino kits, ESP32 boards, sensors, robotics kits, and drone parts.',
-    href: '/marketplace',
-  },
-];
+const homeCard = 'border-white/25 bg-white/[0.13] shadow-[0_24px_70px_rgba(255,255,255,0.08)]';
+const homePanel = 'border-white/20 bg-white/[0.1]';
+const homeInset = 'border-white/18 bg-white/[0.09]';
 
-const testimonials = [
-  {
-    name: 'Mwila Chanda',
-    role: 'Student, University of Zambia',
-    quote: 'Robotix Institute transformed my understanding of robotics. The simulation lab and coding playground are incredible tools for learning.',
-    avatar: 'MC',
-  },
-  {
-    name: 'Natasha Mulenga',
-    role: 'Instructor, Copperbelt University',
-    quote: 'As an instructor, the LMS and competition platform have given my students hands-on experience that was never possible before.',
-    avatar: 'NM',
-  },
-  {
-    name: 'David Banda',
-    role: 'IoT Engineer, Lusaka',
-    quote: 'The IoT Control Center let me prototype and test my smart agriculture project remotely. This is the future of African tech education.',
-    avatar: 'DB',
-  },
-];
-
-const innovationProjects = [
-  { title: 'Line Follower Robot', category: 'Robotics', image: '🤖' },
-  { title: 'Smart Irrigation System', category: 'Agriculture IoT', image: '🌱' },
-  { title: 'Robotic Arm Controller', category: 'Automation', image: '🦾' },
-  { title: 'AI Object Detection', category: 'Computer Vision', image: '👁️' },
-];
-
-// ─── Home Page ──────────────────────────────────────────────
 export default function HomePage() {
+  const featuredPrograms = robotixProfile.programs.slice(0, 4);
+  const trustSignals = robotixProfile.impactStats.slice(0, 4);
+  const featuredPartnerships = robotixProfile.partnerships.slice(0, 4);
+  const proofPoints = robotixProfile.communityWork.slice(0, 3);
+  const buildStories = robotixProfile.projectsAndPlatforms.slice(0, 3);
+  const contacts = robotixProfile.contacts.slice(0, 3);
+  const mediaHighlights = robotixProfile.officialMedia.slice(0, 3);
+
   return (
-    <main className="bg-brand-dark min-h-screen">
+    <main className="min-h-screen bg-brand-dark text-white">
       <Navbar />
 
-      {/* ─── Hero Section ────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        <div className="circuit-overlay" />
+      <section className="relative overflow-hidden">
+        <div className="aurora-bg absolute inset-0 opacity-100" />
+        <div className="bg-grid absolute inset-0 opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/8 via-brand-secondary/10 to-brand-dark/90" />
+        <div className="absolute left-[-12rem] top-24 h-[28rem] w-[28rem] rounded-full bg-white/12 blur-3xl" />
+        <div className="absolute right-[-10rem] top-20 h-[26rem] w-[26rem] rounded-full bg-brand-secondary/24 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-brand-accent/18 blur-3xl" />
         <Suspense fallback={null}>
           <HeroSceneErrorBoundary>
             <HeroScene />
           </HeroSceneErrorBoundary>
         </Suspense>
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/80 to-transparent z-[1]" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-brand-dark to-transparent z-[1]" />
-
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20">
-          <div className="max-w-2xl">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={stagger}
-            >
-              <motion.div variants={fadeUp} className="mb-4">
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-4 pb-16 pt-28 sm:px-6 lg:px-8">
+          <div className="grid w-full gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-3xl">
+              <motion.div variants={fadeUp} className="mb-6 flex items-center gap-4">
                 <Image
-                  src="/images/icon-white.png"
+                  src="/images/icon-color.png"
                   alt="Robotix Institute emblem"
-                  width={64}
-                  height={64}
-                  className="h-16 w-auto object-contain drop-shadow-lg"
+                  width={68}
+                  height={68}
+                  className="h-16 w-auto object-contain drop-shadow-[0_0_30px_rgba(29,242,255,0.3)]"
                   priority
                 />
-              </motion.div>
-
-              <motion.div variants={fadeUp}>
-                <Badge variant="accent" className="mb-6">
-                  <Zap className="w-3 h-3 mr-1" /> Zambia&apos;s #1 Robotics Platform
+                <Badge variant="accent" className="border border-brand-secondary/20 bg-brand-secondary/10 px-4 py-2 text-[11px] uppercase tracking-[0.28em]">
+                  Lusaka STEM Institute
                 </Badge>
               </motion.div>
 
-              <motion.h1
-                variants={fadeUp}
-                className="font-heading text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6"
-              >
-                Build the{' '}
-                <span className="gradient-text">Future</span>
-                <br />
-                with Robotics
-              </motion.h1>
-
-              <motion.p
-                variants={fadeUp}
-                className="text-lg sm:text-xl text-white/60 mb-8 max-w-lg"
-              >
-                Learn robotics, code intelligent machines, compete in challenges,
-                and join Africa&apos;s most vibrant engineering community.
+              <motion.p variants={fadeUp} className="mb-4 text-sm font-medium uppercase tracking-[0.35em] text-brand-accent">
+                Robotix Institute Zambia
               </motion.p>
 
-              <motion.div variants={fadeUp} className="flex flex-wrap gap-4">
-                <Link href="/register">
-                  <Button variant="primary" size="lg" icon={<Rocket className="w-5 h-5" />}>
-                    Start Learning Free
+              <motion.h1 variants={fadeUp} className="max-w-4xl font-heading text-5xl font-bold leading-[0.95] sm:text-6xl lg:text-7xl">
+                Hands-on robotics, coding, and STEM programs for students, families, and schools in Zambia.
+              </motion.h1>
+
+              <motion.p variants={fadeUp} className="mt-6 max-w-2xl text-lg text-white/68 sm:text-xl">
+                {robotixProfile.summary} The website now leads with the institute&apos;s real programs, verified public footprint, and clear routes for parents, students, and school partners.
+              </motion.p>
+
+              <motion.div variants={fadeUp} className="mt-8 flex flex-wrap gap-4">
+                <Link href="/weekend-classes">
+                  <Button variant="primary" size="lg" icon={<GraduationCap className="h-5 w-5" />}>
+                    Explore Weekend Classes
                   </Button>
                 </Link>
-                <Link href="/courses">
-                  <Button variant="secondary" size="lg" icon={<Play className="w-5 h-5" />}>
-                    Explore Courses
+                <Link href="/partners">
+                  <Button variant="secondary" size="lg" icon={<HeartHandshake className="h-5 w-5" />}>
+                    Partner With Robotix
+                  </Button>
+                </Link>
+                <Link href="/about">
+                  <Button variant="ghost" size="lg" icon={<ArrowRight className="h-5 w-5" />}>
+                    Learn About The Institute
                   </Button>
                 </Link>
               </motion.div>
 
-              <motion.div
-                variants={fadeUp}
-                className="flex items-center gap-6 mt-10 text-sm text-white/40"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {['MC', 'NM', 'DB', 'SK'].map((initials, i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full bg-brand-secondary border-2 border-brand-dark flex items-center justify-center text-xs font-bold text-white"
+              <motion.div variants={fadeUp} className="mt-10 flex flex-wrap gap-3">
+                {audiences.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-white/16 bg-white/[0.1] px-4 py-2 text-sm text-white/85 backdrop-blur"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </motion.div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.7 }}
+              className="relative"
+            >
+              <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-br from-brand-accent/20 via-transparent to-brand-secondary/20 blur-2xl" />
+              <GlassCard className={`relative overflow-hidden rounded-[2rem] p-6 ${homeCard}`}>
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/70 to-transparent" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.32em] text-brand-accent">Institute Snapshot</p>
+                    <h2 className="mt-2 font-heading text-2xl font-semibold">
+                      A real learning organization with public programs, partnerships, and student outcomes.
+                    </h2>
+                  </div>
+                  <div className="rounded-2xl border border-brand-accent/20 bg-brand-accent/10 p-3 text-brand-accent shadow-glow-accent">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                </div>
+
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  {trustSignals.map((metric) => (
+                    <div key={metric.label} className={`rounded-2xl border p-4 ${homePanel}`}>
+                      <div className="text-xs uppercase tracking-[0.25em] text-white/45">{metric.label}</div>
+                      <div className="mt-3 font-heading text-3xl font-bold text-white">{metric.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-[1.5rem] border border-white/18 bg-gradient-to-br from-white/[0.14] to-white/[0.06] p-5">
+                  <div className="text-xs uppercase tracking-[0.28em] text-white/45">Public Contact Points</div>
+                  <div className="mt-4 space-y-3">
+                    {contacts.map((contact) => (
+                      <a
+                        key={contact.label}
+                        href={contact.href}
+                        className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm text-white/88 transition-colors hover:text-brand-accent ${homeInset}`}
                       >
-                        {initials}
-                      </div>
+                        <span>{contact.value}</span>
+                        <ArrowRight className="h-4 w-4 text-brand-accent" />
+                      </a>
                     ))}
                   </div>
-                  <span>2,500+ students learning</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-brand-accent text-brand-accent" />
-                  ))}
-                  <span className="ml-1">4.9/5</span>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className={`rounded-[1.5rem] border p-5 ${homePanel}`}>
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Headquarters</p>
+                    <p className="mt-2 text-sm text-white/72">{robotixProfile.headquarters}</p>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-white/20 bg-white/[0.11] p-5">
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Public Hours</p>
+                    <p className="mt-2 text-sm text-white/72">{robotixProfile.openHours}</p>
+                  </div>
                 </div>
-              </motion.div>
+              </GlassCard>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ─── Stats Section ───────────────────────────────── */}
-      <Section className="py-12 -mt-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <GlassCard className="p-6 text-center shine-effect">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                  {stat.icon}
+      <Section className="pt-8 pb-8">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <Badge variant="accent" className="mb-4">Why Robotix Feels Credible</Badge>
+            <h2 className="section-title">Professional trust comes from proof, not just ambition.</h2>
+            <p className="section-subtitle mt-4">
+              The homepage now emphasizes verified institute signals, public partnerships, and clear next steps for the people who actually use the site.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {robotixProfile.profileFacts.map((fact) => (
+                <GlassCard key={fact.label} className={`p-5 ${homeCard}`}>
+                  <div className="text-xs uppercase tracking-[0.24em] text-brand-accent">{fact.label}</div>
+                  <div className="mt-3 text-2xl font-semibold text-white">{fact.value}</div>
+                  <div className="mt-2 text-sm text-white/50">{fact.source}</div>
+                </GlassCard>
+              ))}
+            </div>
+          </div>
+
+          <GlassCard className={`p-6 ${homeCard}`}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-accent/10 text-brand-accent">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/40">Public proof points</p>
+                <h3 className="mt-1 font-heading text-2xl font-semibold">Signals that matter to parents and schools</h3>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {proofPoints.map((point) => (
+                <div key={point} className={`rounded-2xl border p-4 text-sm leading-6 text-white/78 ${homeInset}`}>
+                  {point}
                 </div>
-                <div className="text-3xl font-heading font-bold text-white mb-1">
-                  <AnimatedCounter value={stat.value} suffix={stat.suffix} duration={2} />
-                </div>
-                <div className="text-sm text-white/50">{stat.label}</div>
-              </GlassCard>
-            </motion.div>
+              ))}
+            </div>
+          </GlassCard>
+        </div>
+      </Section>
+
+      <Section withPattern className="pt-0 pb-8">
+        <div className="mb-10 max-w-3xl">
+          <Badge variant="accent" className="mb-4">Programs</Badge>
+          <h2 className="section-title">Clear learning routes are more professional than a crowded front page.</h2>
+          <p className="section-subtitle mt-4">
+            These featured programs give visitors a fast understanding of who Robotix teaches and where to go next.
+          </p>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {featuredPrograms.map((program) => (
+            <GlassCard key={program.title} hover className={`h-full p-6 ${homeCard}`}>
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-accent/10 text-brand-accent">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+              <p className="text-xs uppercase tracking-[0.2em] text-brand-secondary">{program.audience}</p>
+              <h3 className="mt-3 font-heading text-2xl font-semibold text-white">{program.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-white/62">{program.detail}</p>
+            </GlassCard>
           ))}
         </div>
       </Section>
 
-      {/* ─── Platform Features ───────────────────────────── */}
-      <Section withPattern>
-        <SectionHeader
-          badge="Platform Features"
-          title="Everything You Need to Master Robotics"
-          subtitle="From coding playgrounds to real robot control — our platform covers every aspect of robotics education."
-        />
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={stagger}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {platformFeatures.map((feature, i) => (
-            <motion.div key={i} variants={fadeUp}>
-              <Link href={feature.href}>
-                <TiltCard tiltDegree={8} glareEnabled>
-                  <div className="p-6 h-full">
-                    <div className="w-12 h-12 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent mb-4">
-                      {feature.icon}
-                    </div>
-                    <h3 className="font-heading text-lg font-semibold text-white mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-white/50 mb-4">
-                      {feature.description}
-                    </p>
-                    <span className="inline-flex items-center gap-1 text-sm text-brand-accent font-medium">
-                      Explore <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </div>
-                </TiltCard>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
-      </Section>
-
-      {/* ─── Featured Courses ────────────────────────────── */}
-      <Section>
-        <SectionHeader
-          badge="Top Courses"
-          title="Master Robotics & Engineering"
-          subtitle="Expert-led courses designed for every skill level — from beginner to advanced."
-        />
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={stagger}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {featuredCourses.map((course, i) => (
-            <motion.div key={i} variants={fadeUp}>
-              <GlassCard hover className="p-6 h-full flex flex-col shine-effect">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${course.color} flex items-center justify-center text-white mb-4`}>
-                  {course.icon}
-                </div>
-                <Badge variant={course.level === 'Beginner' ? 'primary' : course.level === 'Intermediate' ? 'accent' : 'danger'} className="w-fit mb-3">
-                  {course.level}
-                </Badge>
-                <h3 className="font-heading text-lg font-semibold text-white mb-2">
-                  {course.title}
-                </h3>
-                <p className="text-sm text-white/50 mb-4 flex-1">
-                  {course.description}
-                </p>
-                <div className="flex items-center justify-between text-sm text-white/40">
-                  <span>⏱ {course.duration}</span>
-                  <Link
-                    href="/courses"
-                    className="text-brand-accent hover:text-brand-accent-light transition-colors flex items-center gap-1"
-                  >
-                    Enroll <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </GlassCard>
-            </motion.div>
-          ))}
-        </motion.div>
-        <div className="text-center mt-10">
-          <Link href="/courses">
-            <Button variant="secondary" icon={<BookOpen className="w-4 h-4" />}>
-              View All Courses
-            </Button>
+      <Section className="pt-0 pb-8">
+        <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <Badge variant="accent" className="mb-4">Get Started</Badge>
+            <h2 className="section-title">A launch-ready homepage should route visitors quickly.</h2>
+            <p className="section-subtitle mt-4">
+              These entry points keep the site practical for families, students, and institutional partners.
+            </p>
+          </div>
+          <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-medium text-brand-accent hover:text-brand-accent-light">
+            Contact the institute
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      </Section>
 
-      {/* ─── Innovation Lab Showcase ─────────────────────── */}
-      <Section withPattern>
-        <SectionHeader
-          badge="Innovation Lab"
-          title="Student Projects & Innovations"
-          subtitle="See what our students are building — from smart agriculture to AI-powered robots."
-        />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {innovationProjects.map((project, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <GlassCard hover className="p-6 text-center">
-                <div className="text-5xl mb-4">{project.image}</div>
-                <Badge variant="primary" className="mb-2">{project.category}</Badge>
-                <h3 className="font-heading font-semibold text-white">{project.title}</h3>
-              </GlassCard>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ─── Competition Highlight ────────────────────────── */}
-      <Section>
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <Badge variant="accent" className="mb-4">
-              <Trophy className="w-3 h-3 mr-1" /> National Competitions
-            </Badge>
-            <h2 className="section-title mb-4">
-              Compete at the Highest Level
-            </h2>
-            <p className="text-white/60 mb-6">
-              Join Zambia&apos;s premier national robotics competitions. Form teams,
-              submit projects, and compete for recognition as the best robotics
-              engineers in the country.
-            </p>
-            <ul className="space-y-3 mb-8">
-              {['Team registration & management', 'Project submission system', 'Expert judging panel', 'National leaderboard & awards'].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-white/70">
-                  <div className="w-6 h-6 rounded-full bg-brand-accent/20 flex items-center justify-center">
-                    <Zap className="w-3 h-3 text-brand-accent" />
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {accessRoutes.map((route) => (
+            <Link key={route.title} href={route.href} className="group block h-full">
+              <GlassCard hover className={`h-full p-6 ${homeCard}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="rounded-2xl border border-white/18 bg-white/18 p-3 text-brand-light">
+                    <route.icon className="h-6 w-6" />
                   </div>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link href="/competitions">
-              <Button variant="primary" icon={<Trophy className="w-4 h-4" />}>
-                View Competitions
-              </Button>
+                  <span className="text-sm text-white/40 transition-colors group-hover:text-brand-accent">
+                    Open
+                  </span>
+                </div>
+                <h3 className="mt-5 font-heading text-xl font-semibold">{route.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-white/65">{route.description}</p>
+              </GlassCard>
             </Link>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <GlassCard className="p-8">
-              <div className="text-center mb-6">
-                <div className="text-6xl mb-4">🏆</div>
-                <h3 className="font-heading text-2xl font-bold text-white mb-2">
-                  Zambia Robotics Challenge 2026
-                </h3>
-                <Badge variant="accent">Registration Open</Badge>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/50">Teams Registered</span>
-                  <span className="text-white font-semibold">47 / 100</span>
-                </div>
-                <ProgressBar value={47} />
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="text-center p-3 rounded-xl bg-white/5">
-                    <div className="text-lg font-heading font-bold text-brand-accent">K50,000</div>
-                    <div className="text-xs text-white/40">Prize Pool</div>
-                  </div>
-                  <div className="text-center p-3 rounded-xl bg-white/5">
-                    <div className="text-lg font-heading font-bold text-white">Apr 2026</div>
-                    <div className="text-xs text-white/40">Start Date</div>
-                  </div>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        </div>
-      </Section>
-
-      {/* ─── Testimonials ────────────────────────────────── */}
-      <Section withPattern>
-        <SectionHeader
-          badge="Testimonials"
-          title="What Our Community Says"
-          subtitle="Hear from students, instructors, and engineers building with Robotix Institute."
-        />
-        <div className="grid md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <GlassCard className="p-6 h-full flex flex-col">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-brand-accent text-brand-accent" />
-                  ))}
-                </div>
-                <p className="text-white/70 text-sm mb-6 flex-1 italic">
-                  &ldquo;{testimonial.quote}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-secondary to-brand-primary flex items-center justify-center text-xs font-bold text-white">
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-white">{testimonial.name}</div>
-                    <div className="text-xs text-white/40">{testimonial.role}</div>
-                  </div>
-                </div>
-              </GlassCard>
-            </motion.div>
           ))}
         </div>
       </Section>
 
-      {/* ─── CTA Section ─────────────────────────────────── */}
-      <Section>
-        <GlassCard className="p-12 lg:p-16 text-center overflow-hidden noise-overlay">
-          <div className="circuit-overlay" />
-          <div className="relative">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-            >
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-brand-accent to-brand-accent-light flex items-center justify-center shadow-glow-accent">
-                <Rocket className="w-10 h-10 text-brand-dark" />
+      <Section className="pt-0 pb-8">
+        <PlayVerseShowcase />
+      </Section>
+
+      <Section className="pt-0 pb-8">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <GlassCard className={`p-6 ${homeCard}`}>
+            <Badge variant="accent" className="mb-4">Partnership Signals</Badge>
+            <h2 className="font-heading text-3xl font-bold">Schools and organizations need visible proof of collaboration.</h2>
+            <div className="mt-6 space-y-3">
+              {featuredPartnerships.map((partner) => (
+                <div key={partner.name} className={`rounded-2xl border p-4 ${homeInset}`}>
+                  <div className="font-semibold text-white">{partner.name}</div>
+                  <p className="mt-2 text-sm leading-6 text-white/62">{partner.detail}</p>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+
+          <GlassCard className={`p-6 ${homeCard}`}>
+            <Badge variant="accent" className="mb-4">Hands-On Work</Badge>
+            <h2 className="font-heading text-3xl font-bold">Student and community work should stay visible on the homepage.</h2>
+            <div className="mt-6 space-y-3">
+              {buildStories.map((story) => (
+                <div key={story.title} className={`rounded-2xl border p-4 ${homeInset}`}>
+                  <div className="font-semibold text-white">{story.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-white/62">{story.detail}</p>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </div>
+      </Section>
+
+      <Section className="pt-0 pb-8">
+        <div className="mb-10 max-w-3xl">
+          <Badge variant="accent" className="mb-4">Media Highlights</Badge>
+          <h2 className="section-title">Real visuals make the homepage feel more alive and more trustworthy.</h2>
+          <p className="section-subtitle mt-4">
+            These public Robotix images and the official brand video give visitors a clearer feel for the learning environment, student builds, and classroom energy.
+          </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid gap-4 md:grid-cols-2">
+            {mediaHighlights.map((media, index) => (
+              <GlassCard
+                key={`${media.title}-${index}`}
+                className={index === 0 ? `overflow-hidden p-0 md:col-span-2 ${homeCard}` : `overflow-hidden p-0 ${homeCard}`}
+              >
+                <div className="relative aspect-[16/10]">
+                  <Image
+                    src={media.src}
+                    alt={media.caption}
+                    fill
+                    className="object-cover"
+                    sizes={index === 0 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 100vw, 33vw'}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/20 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <div className="text-xs uppercase tracking-[0.22em] text-brand-accent">Robotix moments</div>
+                    <div className="mt-2 font-heading text-xl font-semibold text-white">{media.title}</div>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-white/72">{media.caption}</p>
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          <GlassCard className={`overflow-hidden p-0 ${homeCard}`}>
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-secondary/12 text-brand-secondary">
+                  <Gamepad2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/40">Featured video</p>
+                  <h3 className="mt-1 font-heading text-2xl font-semibold text-white">{robotixProfile.youtubeVideo.title}</h3>
+                </div>
               </div>
-              <h2 className="section-title mb-4">
-                Ready to Build the Future?
-              </h2>
-              <p className="section-subtitle mx-auto mb-8">
-                Join thousands of students across Zambia and Africa who are learning
-                robotics, coding, and engineering on our platform.
+            </div>
+
+            <div className="p-6">
+              <div className="overflow-hidden rounded-[1.5rem] border border-white/20 bg-white/[0.08]">
+                <div className="aspect-video">
+                  <iframe
+                    src={robotixProfile.youtubeVideo.embedUrl}
+                    title={robotixProfile.youtubeVideo.title}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+
+              <p className="mt-5 text-sm leading-6 text-white/65">
+                This uses the public Robotix homepage video so the site gets richer media immediately without waiting on a separate social integration.
               </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link href="/register">
-                  <Button variant="primary" size="lg" icon={<Zap className="w-5 h-5" />}>
-                    Create Free Account
-                  </Button>
-                </Link>
-                <Link href="/courses">
-                  <Button variant="secondary" size="lg" icon={<GraduationCap className="w-5 h-5" />}>
-                    Browse Courses
-                  </Button>
-                </Link>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a
+                  href={robotixProfile.instagram}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-white/82 transition-colors hover:text-brand-accent ${homeInset}`}
+                >
+                  <Instagram className="h-4 w-4" />
+                  {robotixProfile.instagramHandle}
+                </a>
+                <a
+                  href={robotixProfile.youtubeVideo.watchUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-white/82 transition-colors hover:text-brand-accent ${homeInset}`}
+                >
+                  Watch on YouTube
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <a
+                  href={robotixProfile.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-white/82 transition-colors hover:text-brand-accent ${homeInset}`}
+                >
+                  View official website media
+                  <ArrowRight className="h-4 w-4" />
+                </a>
               </div>
-            </motion.div>
+            </div>
+          </GlassCard>
+        </div>
+      </Section>
+
+      <Section className="pt-4">
+        <GlassCard className={`overflow-hidden px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-14 ${homeCard}`}>
+          <div className="aurora-bg absolute inset-0 opacity-70" />
+          <div className="bg-grid absolute inset-0 opacity-10" />
+          <div className="relative flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <Badge variant="accent" className="mb-4">Next Step</Badge>
+              <h2 className="section-title">
+                A better homepage makes it easier to trust Robotix, contact Robotix, and join Robotix.
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg text-white/68">
+                Parents can enquire about weekend classes, schools can start partnership conversations, and students can explore public programs without feeling lost in the interface.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <Link href="/weekend-classes">
+                <Button variant="primary" size="lg" icon={<Rocket className="h-5 w-5" />}>
+                  Start With Weekend Classes
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button variant="secondary" size="lg" icon={<Mail className="h-5 w-5" />}>
+                  Contact The Institute
+                </Button>
+              </Link>
+            </div>
           </div>
         </GlassCard>
       </Section>

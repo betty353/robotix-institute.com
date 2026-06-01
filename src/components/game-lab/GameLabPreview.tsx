@@ -6,14 +6,15 @@ import { buildGameLabHtml } from '@/lib/game-lab-runner';
 interface GameLabPreviewProps {
   code: string;
   title?: string;
+  previewSceneId?: string | null;
 }
 
 /**
  * Sandboxed Phaser preview. `allow-same-origin` is required so Phaser can bind
  * canvas; top navigation and forms stay blocked.
  */
-export function GameLabPreview({ code, title = 'Preview' }: GameLabPreviewProps) {
-  const srcDoc = useMemo(() => buildGameLabHtml(code), [code]);
+export function GameLabPreview({ code, title = 'Preview', previewSceneId }: GameLabPreviewProps) {
+  const srcDoc = useMemo(() => buildGameLabHtml(code, previewSceneId), [code, previewSceneId]);
 
   return (
     <iframe

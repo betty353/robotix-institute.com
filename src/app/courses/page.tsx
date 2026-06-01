@@ -1,238 +1,297 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { Badge, Button, GlassCard, Input, Section } from '@/components/ui';
+import { robotixProfile } from '@/lib/robotix-profile';
+import { challengeArcs, connectivityModes, languageRoadmap } from '@/lib/ecosystem-data';
 import {
-  Section, SectionHeader, GlassCard, Badge, Button, Input
-} from '@/components/ui';
-import {
-  Search, Filter, Clock, Users, Star, ChevronRight,
-  GraduationCap, BookOpen, Cpu, Wifi, Bot, Rocket, Zap
+  ArrowRight,
+  Bot,
+  Cpu,
+  Filter,
+  Gamepad2,
+  GraduationCap,
+  Rocket,
+  Search,
+  Shield,
+  Sprout,
+  Star,
+  Telescope,
+  Wifi,
 } from 'lucide-react';
 
-const courses = [
+const sectors = [
   {
-    id: '1', slug: 'robotics-fundamentals',
-    title: 'Robotics Fundamentals',
-    description: 'Master the core foundations of robotics — mechanics, electronics, sensors, actuators, and basic programming for beginners.',
-    category: 'Robotics Fundamentals', level: 'beginner', duration: 24,
-    students: 856, rating: 4.9, price: 0,
-    instructor: { name: 'Dr. Mwape Chilongo', avatar: 'MC' },
-    icon: <Cpu className="w-8 h-8" />,
+    id: 'little-einsteins',
+    slug: 'robotics-fundamentals',
+    title: 'Little Einsteins',
+    category: 'Pre-elementary',
+    level: 'Beginner',
+    duration: 'Starter pathway',
+    energy: 'Discovery lane',
+    icon: Cpu,
+    accent: 'from-brand-secondary via-brand-accent to-brand-primary',
+    description: 'Early robotics exposure using playful, hands-on learning with LEGO robots and Scratch Junior style activities.',
+    outcomes: ['Explore robots', 'Learn simple logic', 'Build confidence through play'],
   },
   {
-    id: '2', slug: 'arduino-robotics',
-    title: 'Arduino Robotics',
-    description: 'Build intelligent robots using Arduino microcontrollers. Hands-on projects including line followers, obstacle avoiders, and robotic arms.',
-    category: 'Arduino Robotics', level: 'intermediate', duration: 32,
-    students: 612, rating: 4.8, price: 150,
-    instructor: { name: 'Eng. Bwalya Mwansa', avatar: 'BM' },
-    icon: <Zap className="w-8 h-8" />,
+    id: 'byte-buddies',
+    slug: 'arduino-robotics',
+    title: 'Byte Buddies',
+    category: 'Elementary',
+    level: 'Beginner',
+    duration: 'Ages 7-10',
+    energy: 'Foundation lane',
+    icon: Wifi,
+    accent: 'from-emerald-400 via-brand-secondary to-brand-primary',
+    description: 'Foundational robotics and coding for younger school-age learners moving from curiosity into structured STEM habits.',
+    outcomes: ['Understand sequences', 'Build beginner projects', 'Start coding with confidence'],
   },
   {
-    id: '3', slug: 'esp32-iot-systems',
-    title: 'ESP32 IoT Systems',
-    description: 'Connect robots to the internet with ESP32. Build smart IoT solutions with WiFi, Bluetooth, MQTT, and cloud dashboards.',
-    category: 'ESP32 IoT Systems', level: 'intermediate', duration: 28,
-    students: 478, rating: 4.7, price: 200,
-    instructor: { name: 'Mr. Kalaba Tembo', avatar: 'KT' },
-    icon: <Wifi className="w-8 h-8" />,
+    id: 'imagineering',
+    slug: 'ai-robotics',
+    title: 'Imagineering',
+    category: 'High school',
+    level: 'Intermediate',
+    duration: 'Ages 11-14',
+    energy: 'Builder lane',
+    icon: Bot,
+    accent: 'from-brand-accent via-fuchsia-500 to-brand-secondary',
+    description: 'Project-based robotics, sensors, drones, AI, IoT, and text-based coding for learners stepping into deeper technical work.',
+    outcomes: ['Use sensors', 'Prototype smart systems', 'Blend code with robotics'],
   },
   {
-    id: '4', slug: 'ai-robotics',
-    title: 'AI Robotics',
-    description: 'Integrate machine learning and computer vision into robotic systems. Object detection, path planning, and autonomous navigation.',
-    category: 'AI Robotics', level: 'advanced', duration: 40,
-    students: 324, rating: 4.9, price: 350,
-    instructor: { name: 'Dr. Mutale Zulu', avatar: 'MZ' },
-    icon: <Bot className="w-8 h-8" />,
+    id: 'code-quest',
+    slug: 'game-development',
+    title: 'Code Quest',
+    category: 'Script-based coding',
+    level: 'Advanced',
+    duration: 'Ages 15-18',
+    energy: 'Creator lane',
+    icon: Gamepad2,
+    accent: 'from-brand-accent via-amber-300 to-orange-400',
+    description: 'Programming-focused pathway for older learners ready for deeper scripting, logic, and project execution.',
+    outcomes: ['Write real code', 'Build portfolio projects', 'Prepare for advanced innovation work'],
   },
   {
-    id: '5', slug: 'drone-programming',
-    title: 'Drone Programming',
-    description: 'Program autonomous drones for navigation, aerial mapping, surveillance, and precision agriculture missions.',
-    category: 'Drone Programming', level: 'advanced', duration: 36,
-    students: 256, rating: 4.8, price: 300,
-    instructor: { name: 'Capt. Lubinda Phiri', avatar: 'LP' },
-    icon: <Rocket className="w-8 h-8" />,
+    id: 'camps',
+    slug: 'smart-agriculture-automation',
+    title: 'Camps',
+    category: 'Seasonal programs',
+    level: 'Intermediate',
+    duration: 'All ages',
+    energy: 'Momentum lane',
+    icon: Sprout,
+    accent: 'from-lime-400 via-emerald-400 to-brand-secondary',
+    description: 'Holiday and school-break programs covering robotics, programming, STEM, and game development in intensive short bursts.',
+    outcomes: ['Ship projects faster', 'Join team activities', 'Grow interest through immersion'],
   },
   {
-    id: '6', slug: 'smart-agriculture-automation',
-    title: 'Smart Agriculture Automation',
-    description: 'Automate farming with robotics, environment sensors, smart irrigation, and data-driven crop management systems.',
-    category: 'Smart Agriculture', level: 'intermediate', duration: 30,
-    students: 389, rating: 4.7, price: 175,
-    instructor: { name: 'Dr. Namukolo Sinyinza', avatar: 'NS' },
-    icon: <BookOpen className="w-8 h-8" />,
+    id: 'community-initiatives',
+    slug: 'innovation-leadership',
+    title: 'Community-Based Initiatives',
+    category: 'Access programs',
+    level: 'Intermediate',
+    duration: 'Partner-based',
+    energy: 'Impact lane',
+    icon: Rocket,
+    accent: 'from-slate-400 via-brand-primary to-brand-accent',
+    description: 'Programs for underserved learners, partner schools, and community groups designed to widen access to robotics and digital skills.',
+    outcomes: ['Expand access', 'Support schools', 'Deliver practical STEM exposure'],
   },
-];
+] as const;
 
-const categories = [
-  'All', 'Robotics Fundamentals', 'Arduino Robotics', 'ESP32 IoT Systems',
-  'AI Robotics', 'Drone Programming', 'Smart Agriculture',
-];
-
-const levels = ['All', 'beginner', 'intermediate', 'advanced'];
+const levelFilters = ['All', 'Beginner', 'Intermediate', 'Advanced'] as const;
 
 export default function CoursesPage() {
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedLevel, setSelectedLevel] = useState('All');
+  const [selectedLevel, setSelectedLevel] = useState<(typeof levelFilters)[number]>('All');
 
-  const filtered = courses.filter((course) => {
-    const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase()) ||
-      course.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
-    const matchesLevel = selectedLevel === 'All' || course.level === selectedLevel;
-    return matchesSearch && matchesCategory && matchesLevel;
-  });
+  const filteredSectors = useMemo(() => {
+    return sectors.filter((sector) => {
+      const matchesSearch =
+        sector.title.toLowerCase().includes(search.toLowerCase()) ||
+        sector.description.toLowerCase().includes(search.toLowerCase()) ||
+        sector.category.toLowerCase().includes(search.toLowerCase());
+      const matchesLevel = selectedLevel === 'All' || sector.level === selectedLevel;
+      return matchesSearch && matchesLevel;
+    });
+  }, [search, selectedLevel]);
 
   return (
-    <main className="bg-brand-dark min-h-screen">
+    <main className="min-h-screen bg-brand-dark text-white">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="circuit-overlay" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <Badge variant="accent" className="mb-4">
-              <GraduationCap className="w-3 h-3 mr-1" /> Learning Management System
-            </Badge>
-            <h1 className="section-title mb-4">
-              Master <span className="gradient-text">Robotics & Engineering</span>
-            </h1>
-            <p className="section-subtitle mx-auto mb-8">
-              Expert-led courses with video lessons, hands-on assignments, quizzes, and certificates.
-            </p>
-          </motion.div>
+      <section className="relative overflow-hidden pt-28">
+        <div className="aurora-bg absolute inset-0 opacity-80" />
+        <div className="bg-grid absolute inset-0 opacity-10" />
+        <div className="relative mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+            <div>
+              <Badge variant="accent" className="mb-4">
+                <GraduationCap className="mr-1 h-3 w-3" />
+                Robotix Programs
+              </Badge>
+              <h1 className="font-heading text-4xl font-bold sm:text-5xl">
+                Explore Robotix through real public learning pathways.
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg text-white/65">
+                This page reflects the public program structure Robotix presents: Little Einsteins, Byte Buddies, Imagineering, Code Quest, camps, and community-based initiatives.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/about">
+                  <Button icon={<Telescope className="h-4 w-4" />}>See institute profile</Button>
+                </Link>
+                <Link href="/onboarding">
+                  <Button variant="secondary" icon={<Shield className="h-4 w-4" />}>Personalize my route</Button>
+                </Link>
+              </div>
+            </div>
+
+            <GlassCard className="p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  { label: 'Public programs', value: robotixProfile.programs.length.toString() },
+                  { label: 'Students trained', value: '2,500+' },
+                  { label: 'Awards won', value: '6' },
+                  { label: 'Founded', value: '2020' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="text-xs uppercase tracking-[0.24em] text-white/40">{item.label}</div>
+                    <div className="mt-3 text-2xl font-bold">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </div>
         </div>
       </section>
 
-      {/* Filters */}
       <Section className="py-8">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-8">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full max-w-xl">
             <Input
-              placeholder="Search courses..."
+              placeholder="Search sectors, missions, or categories..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              icon={<Search className="w-4 h-4" />}
+              onChange={(event) => setSearch(event.target.value)}
+              icon={<Search className="h-4 w-4" />}
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            {levels.map((level) => (
+            {levelFilters.map((level) => (
               <button
                 key={level}
                 onClick={() => setSelectedLevel(level)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
                   selectedLevel === level
-                    ? 'bg-brand-accent text-brand-dark'
-                    : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
+                    ? 'bg-brand-secondary text-white'
+                    : 'bg-white/5 text-white/55 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                {level === 'All' ? 'All Levels' : level.charAt(0).toUpperCase() + level.slice(1)}
+                {level}
               </button>
             ))}
           </div>
         </div>
+      </Section>
 
-        {/* Category pills */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedCategory === cat
-                  ? 'bg-brand-secondary text-white'
-                  : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      <Section className="py-4">
+        <div className="mb-6 flex items-center gap-2 text-sm text-white/50">
+          <Filter className="h-4 w-4 text-brand-secondary" />
+          {filteredSectors.length} program pathways available
         </div>
-
-        {/* Course Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((course, i) => (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <Link href={`/courses/${course.slug}`}>
-                <GlassCard hover className="p-6 h-full flex flex-col">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-14 h-14 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                      {course.icon}
-                    </div>
-                    {course.price === 0 ? (
-                      <Badge variant="success">Free</Badge>
-                    ) : (
-                      <span className="text-lg font-heading font-bold text-brand-accent">
-                        K{course.price}
-                      </span>
-                    )}
-                  </div>
-
-                  <Badge
-                    variant={course.level === 'beginner' ? 'primary' : course.level === 'intermediate' ? 'accent' : 'danger'}
-                    className="w-fit mb-3"
-                  >
-                    {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
-                  </Badge>
-
-                  <h3 className="font-heading text-lg font-semibold text-white mb-2">
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-white/50 mb-4 flex-1">
-                    {course.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-white/40 mb-4">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {course.duration}h
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" /> {course.students}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-brand-accent" /> {course.rating}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-brand-secondary flex items-center justify-center text-[10px] font-bold text-white">
-                        {course.instructor.avatar}
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filteredSectors.map((sector, index) => {
+            const Icon = sector.icon;
+            return (
+              <motion.div
+                key={sector.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Link href={`/courses/${sector.slug}`}>
+                  <GlassCard hover className="flex h-full flex-col p-6">
+                    <div className="mb-5 flex items-start justify-between gap-4">
+                      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${sector.accent}`}>
+                        <Icon className="h-7 w-7 text-white" />
                       </div>
-                      <span className="text-xs text-white/50">{course.instructor.name}</span>
+                      <div className="text-right">
+                        <Badge variant={sector.level === 'Advanced' ? 'danger' : sector.level === 'Intermediate' ? 'accent' : 'success'}>
+                          {sector.level}
+                        </Badge>
+                        <p className="mt-2 text-xs uppercase tracking-[0.18em] text-white/35">{sector.energy}</p>
+                      </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-brand-accent" />
-                  </div>
-                </GlassCard>
-              </Link>
-            </motion.div>
-          ))}
+                    <p className="text-xs uppercase tracking-[0.24em] text-brand-secondary">{sector.category}</p>
+                    <h2 className="mt-2 font-heading text-2xl font-bold">{sector.title}</h2>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-white/60">{sector.description}</p>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {sector.outcomes.map((outcome) => (
+                        <span key={outcome} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/60">
+                          {outcome}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4 text-sm">
+                      <span className="text-white/45">{sector.duration}</span>
+                      <span className="inline-flex items-center gap-2 font-semibold text-brand-accent">
+                        Enter sector <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </GlassCard>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
+      </Section>
 
-        {filtered.length === 0 && (
-          <div className="text-center py-16">
-            <GraduationCap className="w-12 h-12 mx-auto text-white/20 mb-4" />
-            <p className="text-white/50">No courses found matching your criteria.</p>
-          </div>
-        )}
+      <Section className="py-8">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <GlassCard className="p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Star className="h-5 w-5 text-brand-secondary" />
+              <h2 className="font-heading text-2xl font-bold">Challenge arcs</h2>
+            </div>
+            <div className="space-y-3">
+              {challengeArcs.map((challenge) => (
+                <div key={challenge.title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-white">{challenge.title}</p>
+                    <Badge variant="accent">{challenge.xp}</Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-white/58">{challenge.detail}</p>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+
+          <GlassCard className="p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Wifi className="h-5 w-5 text-brand-secondary" />
+              <h2 className="font-heading text-2xl font-bold">Access architecture</h2>
+            </div>
+            <div className="space-y-3">
+              {connectivityModes.map((mode) => (
+                <div key={mode.title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-white">{mode.title}</p>
+                    <span className="text-xs uppercase tracking-[0.2em] text-brand-secondary">{mode.signal}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-white/58">{mode.detail}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 rounded-2xl border border-brand-secondary/20 bg-brand-secondary/10 p-4 text-sm text-white/68">
+              The learning layer is now ready to be framed for premium immersive users and for lower-bandwidth school contexts without changing the brand.
+            </div>
+          </GlassCard>
+        </div>
       </Section>
 
       <Footer />

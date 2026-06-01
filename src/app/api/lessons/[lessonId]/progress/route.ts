@@ -6,6 +6,7 @@ import {
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { awardPoints } from '@/lib/gamification';
+import { ensureCourseCertificate } from '@/lib/certificates';
 
 interface Params {
   params: { lessonId: string };
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     const nextProgress =
       courseLessonCount === 0 ? 0 : Math.min(1, doneCount / courseLessonCount);
 
-    await prisma.enrollment.update({
+    const updatedEnrollment = await prisma.enrollment.update({
       where: { userId_courseId: { userId: user.userId, courseId } },
       data: {
         progress: nextProgress,
@@ -110,11 +111,22 @@ export async function POST(request: NextRequest, { params }: Params) {
       },
     });
 
+    const certificate = updatedEnrollment.completed
+      ? await ensureCourseCertificate(user.userId, courseId)
+      : null;
+
     return NextResponse.json(
       createApiResponse({
         lessonId: lesson.id,
         completed: true,
         courseProgressApprox: Math.round(nextProgress * 100),
+        certificate: certificate
+          ? {
+              certCode: certificate.certCode,
+              title: certificate.title,
+              issueDate: certificate.issueDate,
+            }
+          : null,
       })
     );
   } catch (e) {

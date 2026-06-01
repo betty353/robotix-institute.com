@@ -81,6 +81,9 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     let viewerEnrollment: { progress: number; completed: boolean } | null = null;
     let completedLessonIds: string[] = [];
+    let viewerCertificate:
+      | { certCode: string; title: string; issueDate: Date }
+      | null = null;
 
     if (jwt) {
       const en = await prisma.enrollment.findUnique({
@@ -100,6 +103,21 @@ export async function GET(request: NextRequest, { params }: Params) {
           select: { lessonId: true },
         });
         completedLessonIds = progressRows.map((r) => r.lessonId);
+
+        const certificate = await prisma.certificate.findFirst({
+          where: {
+            userId: jwt.userId,
+            courseId: course.id,
+          },
+          select: {
+            certCode: true,
+            title: true,
+            issueDate: true,
+          },
+        });
+        if (certificate) {
+          viewerCertificate = certificate;
+        }
       }
     }
 
@@ -111,6 +129,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         enrolledCount: course._count.enrollments,
         viewerEnrollment,
         completedLessonIds,
+        viewerCertificate,
       })
     );
   } catch (error) {

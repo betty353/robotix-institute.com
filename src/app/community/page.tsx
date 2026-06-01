@@ -1,255 +1,610 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { Section, GlassCard, Badge, Button, Input } from '@/components/ui';
+import { Badge, Button, GlassCard, Input, LoadingSpinner, Section, Textarea } from '@/components/ui';
+import { creatorPipelines, futureAfricaNodes } from '@/lib/ecosystem-data';
+import { useApi, useAuth } from '@/hooks/useApi';
 import {
-  MessageSquare, Users, Search, ThumbsUp, MessageCircle, Eye, Pin,
-  TrendingUp, Clock, Star, ChevronRight, Plus, Hash, Flame, Award
+  ArrowRight,
+  Bot,
+  BookOpen,
+  Briefcase,
+  Flame,
+  Globe2,
+  Heart,
+  MessageCircle,
+  Plus,
+  RadioTower,
+  Search,
+  Send,
+  Shield,
+  Sparkles,
+  Sprout,
+  Users,
+  Wifi,
 } from 'lucide-react';
 
-const forumCategories = [
-  { id: '1', name: 'General Discussion', icon: '💬', description: 'Introduce yourself and chat about anything robotics-related', posts: 342, color: 'from-blue-500 to-indigo-500' },
-  { id: '2', name: 'Arduino & Microcontrollers', icon: '🔲', description: 'Help and discussion about Arduino, ESP32, Raspberry Pi, and more', posts: 567, color: 'from-green-500 to-emerald-500' },
-  { id: '3', name: 'IoT & Smart Devices', icon: '📡', description: 'Internet of Things projects, MQTT, sensors, and connectivity', posts: 234, color: 'from-purple-500 to-violet-500' },
-  { id: '4', name: 'AI & Computer Vision', icon: '🧠', description: 'Machine learning, TensorFlow, OpenCV, and AI-powered robots', posts: 178, color: 'from-pink-500 to-rose-500' },
-  { id: '5', name: 'Project Showcase', icon: '🏆', description: 'Share your finished projects and get feedback from the community', posts: 145, color: 'from-yellow-500 to-orange-500' },
-  { id: '6', name: 'Troubleshooting', icon: '🔧', description: 'Get help debugging your circuits, code, and robot designs', posts: 890, color: 'from-red-500 to-pink-500' },
+const tabs = ['Channels', 'Signal Feed', 'Mentors'] as const;
+type TabKey = (typeof tabs)[number];
+
+interface CommunityCategory {
+  id: string;
+  name: string;
+  description: string;
+  postCount: number;
+}
+
+interface CommunityPost {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  isPinned?: boolean;
+  category?: { id: string; name: string };
+  user?: { id: string; firstName: string; lastName: string; avatar?: string };
+  _count?: { comments: number };
+}
+
+interface CommunityComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user?: { id: string; firstName: string; lastName: string; role?: string };
+}
+
+const fallbackCategories: CommunityCategory[] = [
+  { id: 'robotics', name: 'Robotics', description: 'Build logs, systems design, autonomous machines, and practical robotics exchange.', postCount: 482 },
+  { id: 'ai', name: 'AI', description: 'Model ideas, copilots, automation systems, prompts, and practical learning pathways.', postCount: 316 },
+  { id: 'coding', name: 'Coding', description: 'JavaScript, Python, Arduino, embedded logic, and debugging conversations.', postCount: 558 },
+  { id: 'cybersecurity', name: 'Cybersecurity', description: 'Safer systems, digital responsibility, and practical security awareness.', postCount: 124 },
+  { id: 'agriculture', name: 'Agriculture', description: 'Smart irrigation, field data, weather systems, and agricultural automation.', postCount: 204 },
+  { id: 'drones', name: 'Drones', description: 'Flight missions, mapping, data capture, and autonomous aerial workflows.', postCount: 178 },
+  { id: 'iot', name: 'IoT', description: 'Connected sensors, dashboards, monitoring, and realtime device ecosystems.', postCount: 290 },
+  { id: 'innovation', name: 'Innovation', description: 'Future-of-Africa thinking, prototypes, and bold ecosystem ideas.', postCount: 246 },
+  { id: 'startups', name: 'Startups', description: 'Founder journeys, pilots, validation loops, and product-building strategy.', postCount: 139 },
+] as const;
+
+const fallbackPosts: CommunityPost[] = [
+  {
+    id: 'post-1',
+    title: 'How should a school robotics club turn student projects into real startup prototypes?',
+    content: 'Looking for a school-friendly pipeline from club builds to real pilot-ready prototypes without losing student ownership.',
+    createdAt: new Date().toISOString(),
+    isPinned: true,
+    category: { id: 'innovation', name: 'Innovation' },
+    user: { id: 'u1', firstName: 'Founder', lastName: 'Circle' },
+    _count: { comments: 37 },
+  },
+  {
+    id: 'post-2',
+    title: 'Best sensor stack for a smart irrigation pilot built for Zambian weather conditions',
+    content: 'Trying to balance affordability, reliability, and low-power monitoring for a school-linked agriculture pilot.',
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    category: { id: 'agriculture', name: 'Agriculture' },
+    user: { id: 'u2', firstName: 'AgriTech', lastName: 'Network' },
+    _count: { comments: 28 },
+  },
+  {
+    id: 'post-3',
+    title: 'Can students build AI-powered robotics portfolios that feel like future LinkedIn profiles?',
+    content: 'Exploring how portfolios, badges, and published prototypes can create a stronger innovation identity for learners.',
+    createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+    isPinned: true,
+    category: { id: 'ai', name: 'AI' },
+    user: { id: 'u3', firstName: 'Portfolio', lastName: 'Lab' },
+    _count: { comments: 19 },
+  },
 ];
 
-const trendingPosts = [
+const mentorCircles = [
   {
-    id: '1', title: 'How I built a solar-powered farm monitoring system for K500',
-    author: 'Mwila C.', avatar: 'MC', category: 'IoT & Smart Devices',
-    likes: 89, replies: 34, views: 1200, isPinned: true,
-    timeAgo: '2 hours ago', tags: ['ESP32', 'Solar', 'Agriculture'],
+    name: 'Robotics Systems Mentor',
+    specialty: 'Controls, electronics, and club project architecture.',
+    availability: 'Available',
   },
   {
-    id: '2', title: 'Best resources for learning ROS2 on Raspberry Pi?',
-    author: 'Thandiwe M.', avatar: 'TM', category: 'General Discussion',
-    likes: 45, replies: 22, views: 890, isPinned: false,
-    timeAgo: '5 hours ago', tags: ['ROS2', 'Raspberry Pi', 'Learning'],
+    name: 'AI and Vision Mentor',
+    specialty: 'Model ideas, practical computer vision, and AI pathway support.',
+    availability: 'Available',
   },
   {
-    id: '3', title: 'PID Controller tuning guide for line follower robots',
-    author: 'Joseph K.', avatar: 'JK', category: 'Arduino & Microcontrollers',
-    likes: 67, replies: 18, views: 1450, isPinned: true,
-    timeAgo: '1 day ago', tags: ['PID', 'Arduino', 'Tutorial'],
-  },
-  {
-    id: '4', title: 'ESP32-CAM object detection with TensorFlow Lite — complete guide',
-    author: 'Grace N.', avatar: 'GN', category: 'AI & Computer Vision',
-    likes: 112, replies: 41, views: 2300, isPinned: false,
-    timeAgo: '2 days ago', tags: ['TensorFlow', 'ESP32-CAM', 'AI'],
-  },
-  {
-    id: '5', title: 'Troubleshooting L298N motor driver — motors not spinning',
-    author: 'David M.', avatar: 'DM', category: 'Troubleshooting',
-    likes: 23, replies: 15, views: 560, isPinned: false,
-    timeAgo: '3 days ago', tags: ['L298N', 'Motors', 'Help'],
+    name: 'Startup Catalyst Mentor',
+    specialty: 'Validation, product framing, pitch flow, and pilot readiness.',
+    availability: 'Limited',
   },
 ];
 
-const topContributors = [
-  { name: 'Mwila C.', avatar: 'MC', points: 2450, posts: 89, badge: 'Expert' },
-  { name: 'Grace N.', avatar: 'GN', points: 2100, posts: 76, badge: 'Expert' },
-  { name: 'Joseph K.', avatar: 'JK', points: 1800, posts: 65, badge: 'Advanced' },
-  { name: 'Thandiwe M.', avatar: 'TM', points: 1450, posts: 52, badge: 'Advanced' },
-  { name: 'David M.', avatar: 'DM', points: 1200, posts: 44, badge: 'Intermediate' },
-];
-
-const mentors = [
-  { name: 'Dr. Bwalya Mutale', specialty: 'Robotics & Automation', avatar: 'BM', available: true },
-  { name: 'Eng. Sarah Lungu', specialty: 'IoT & Embedded Systems', avatar: 'SL', available: true },
-  { name: 'Prof. James Mwanza', specialty: 'AI & Computer Vision', avatar: 'JM', available: false },
-];
-
-const tabs = ['Forums', 'Trending', 'Mentors'];
+const categoryIcons: Record<string, typeof Bot> = {
+  robotics: Bot,
+  ai: Sparkles,
+  coding: BookOpen,
+  cybersecurity: Shield,
+  agriculture: Sprout,
+  drones: RadioTower,
+  iot: Wifi,
+  innovation: Globe2,
+  startups: Briefcase,
+};
 
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState('Forums');
+  const { get, post } = useApi();
+  const { isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabKey>('Channels');
   const [search, setSearch] = useState('');
+  const [categories, setCategories] = useState<CommunityCategory[]>(fallbackCategories);
+  const [posts, setPosts] = useState<CommunityPost[]>(fallbackPosts);
+  const [comments, setComments] = useState<CommunityComment[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string>(fallbackPosts[0].id);
+  const [loading, setLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [commenting, setCommenting] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [newPost, setNewPost] = useState({ title: '', content: '', categoryId: '' });
+  const [newComment, setNewComment] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const [categoryRes, postsRes] = await Promise.all([
+          fetch('/api/forum/categories?limit=20').then((res) => res.json()).catch(() => null),
+          fetch('/api/forum/posts?limit=12').then((res) => res.json()).catch(() => null),
+        ]);
+        if (cancelled) return;
+
+        const liveCategories = Array.isArray(categoryRes?.data)
+          ? categoryRes.data.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              description: item.description || `${item.name} conversations across the Robotix ecosystem.`,
+              postCount: item.postCount || 0,
+            }))
+          : [];
+        const livePosts = Array.isArray(postsRes?.data?.posts) ? postsRes.data.posts : [];
+
+        if (liveCategories.length > 0) {
+          setCategories(liveCategories);
+          setNewPost((current) => ({ ...current, categoryId: current.categoryId || liveCategories[0].id }));
+        }
+        if (livePosts.length > 0) {
+          setPosts(livePosts);
+          setSelectedPostId(livePosts[0].id);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const selected = posts.find((post) => post.id === selectedPostId);
+    if (!selected) {
+      setComments([]);
+      return;
+    }
+    if (selected.id.startsWith('post-')) {
+      setComments([]);
+      return;
+    }
+    const selectedId = selected.id;
+
+    let cancelled = false;
+    async function loadComments() {
+      setCommentsLoading(true);
+      try {
+        const res = await fetch(`/api/forum/comments?postId=${selectedId}&limit=40`).then((response) => response.json()).catch(() => null);
+        if (!cancelled) {
+          setComments(Array.isArray(res?.data) ? res.data : []);
+        }
+      } finally {
+        if (!cancelled) setCommentsLoading(false);
+      }
+    }
+
+    loadComments();
+    return () => {
+      cancelled = true;
+    };
+  }, [posts, selectedPostId]);
+
+  const filteredCategories = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return categories;
+    return categories.filter((item) =>
+      item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
+    );
+  }, [categories, search]);
+
+  const filteredPosts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return posts;
+    return posts.filter((item) =>
+      item.title.toLowerCase().includes(query) ||
+      item.content.toLowerCase().includes(query) ||
+      item.category?.name.toLowerCase().includes(query)
+    );
+  }, [posts, search]);
+
+  const selectedPost = filteredPosts.find((post) => post.id === selectedPostId) || filteredPosts[0] || null;
+  const liveCategoryOptions = categories.filter((category) => !fallbackCategories.some((fallback) => fallback.id === category.id));
+
+  const handleCreatePost = async () => {
+    if (!isAuthenticated) {
+      toast.error('Sign in to publish a community post.');
+      return;
+    }
+    if (!newPost.categoryId) {
+      toast.error('A live category is required before posting.');
+      return;
+    }
+
+    setPosting(true);
+    try {
+      const res = await post<CommunityPost>('/forum/posts', newPost);
+      if (res.data) {
+        setPosts((current) => [res.data!, ...current]);
+        setSelectedPostId(res.data.id);
+        setNewPost({ title: '', content: '', categoryId: newPost.categoryId });
+        setComposerOpen(false);
+        setActiveTab('Signal Feed');
+        toast.success('Post published to the community.');
+      }
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Could not create post');
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleComment = async () => {
+    if (!selectedPost || !isAuthenticated) {
+      toast.error('Sign in to join the discussion.');
+      return;
+    }
+    if (selectedPost.id.startsWith('post-')) {
+      toast.error('Comments are only enabled for live forum posts.');
+      return;
+    }
+
+    setCommenting(true);
+    try {
+      const res = await post<CommunityComment>('/forum/comments', {
+        postId: selectedPost.id,
+        content: newComment,
+      });
+      if (res.data) {
+        setComments((current) => [...current, res.data!]);
+        setPosts((current) =>
+          current.map((post) =>
+            post.id === selectedPost.id
+              ? { ...post, _count: { comments: (post._count?.comments || 0) + 1 } }
+              : post
+          )
+        );
+        setNewComment('');
+        toast.success('Comment posted.');
+      }
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Could not post comment');
+    } finally {
+      setCommenting(false);
+    }
+  };
 
   return (
-    <main className="bg-brand-dark min-h-screen">
+    <main className="min-h-screen bg-brand-dark text-white">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="circuit-overlay" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Badge variant="accent" className="mb-4">
-              <Users className="w-3 h-3 mr-1" /> Community Hub
-            </Badge>
-            <h1 className="section-title mb-4">
-              Robotics <span className="gradient-text">Community</span>
-            </h1>
-            <p className="section-subtitle mx-auto">
-              Connect, collaborate, and learn with Zambia&apos;s growing robotics community.
-            </p>
-            {/* Community stats */}
-            <div className="flex flex-wrap justify-center gap-8 mt-8">
-              {[
-                { label: 'Members', value: '2,500+' },
-                { label: 'Forum Posts', value: '3,400+' },
-                { label: 'Projects Shared', value: '450+' },
-                { label: 'Mentors', value: '15+' },
-              ].map((s, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-2xl font-bold text-white">{s.value}</p>
-                  <p className="text-xs text-white/40">{s.label}</p>
+      <section className="relative overflow-hidden pt-28">
+        <div className="aurora-bg absolute inset-0 opacity-80" />
+        <div className="bg-grid absolute inset-0 opacity-10" />
+        <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+            <div>
+              <Badge variant="accent" className="mb-4">
+                <Users className="mr-1 h-3 w-3" />
+                Creator Network
+              </Badge>
+              <h1 className="font-heading text-4xl font-bold sm:text-5xl">
+                The social operating layer for Africa&apos;s future builders.
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg text-white/65">
+                Robotix Community is where robotics clubs, AI creators, schools, startups, and mentors
+                publish work, exchange ideas, and turn momentum into visible innovation.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Button size="lg" icon={<Plus className="h-5 w-5" />} onClick={() => setComposerOpen((value) => !value)}>
+                  {composerOpen ? 'Close composer' : 'Create discussion'}
+                </Button>
+                <Link href="/game-gallery">
+                  <Button variant="secondary" size="lg" icon={<ArrowRight className="h-5 w-5" />}>Explore creator releases</Button>
+                </Link>
+              </div>
+            </div>
+
+            <GlassCard className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Network signals</p>
+                  <h2 className="mt-2 font-heading text-2xl font-semibold">Alive, moderated, and creator-led.</h2>
                 </div>
+                <Flame className="h-6 w-6 text-brand-accent" />
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {[
+                  { label: 'Channels', value: categories.length.toString() },
+                  { label: 'Signal feed', value: `${posts.length}+` },
+                  { label: 'Mentor circles', value: mentorCircles.length.toString() },
+                  { label: 'Expansion nodes', value: futureAfricaNodes.length.toString() },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="text-xs uppercase tracking-[0.24em] text-white/40">{item.label}</div>
+                    <div className="mt-3 text-2xl font-bold">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </div>
+
+          {composerOpen ? (
+            <div className="mt-8">
+              <GlassCard className="p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-heading text-2xl font-bold">Publish a community thread</h2>
+                    <p className="mt-1 text-sm text-white/55">Share an idea, question, project insight, or collaboration request.</p>
+                  </div>
+                  <Badge variant="primary">Live forum</Badge>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    value={newPost.title}
+                    onChange={(event) => setNewPost((current) => ({ ...current, title: event.target.value }))}
+                    placeholder="Discussion title"
+                  />
+                  <select
+                    value={newPost.categoryId}
+                    onChange={(event) => setNewPost((current) => ({ ...current, categoryId: event.target.value }))}
+                    className="input-field"
+                  >
+                    <option value="">Select live category</option>
+                    {liveCategoryOptions.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <Textarea
+                  className="mt-4 min-h-[140px]"
+                  value={newPost.content}
+                  onChange={(event) => setNewPost((current) => ({ ...current, content: event.target.value }))}
+                  placeholder="Describe the problem, the prototype, or the idea you want the ecosystem to respond to."
+                />
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button onClick={handleCreatePost} loading={posting} icon={<Send className="h-4 w-4" />}>
+                    Publish thread
+                  </Button>
+                  <Button variant="ghost" onClick={() => setComposerOpen(false)}>Cancel</Button>
+                </div>
+                {liveCategoryOptions.length === 0 ? (
+                  <p className="mt-3 text-xs text-white/40">Live posting will unlock once forum categories are available from the backend.</p>
+                ) : null}
+              </GlassCard>
+            </div>
+          ) : null}
+
+          <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                    activeTab === tab
+                      ? 'bg-brand-accent text-brand-dark shadow-glow-accent'
+                      : 'border border-white/10 bg-white/[0.03] text-white/65 hover:border-brand-accent/25 hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
               ))}
             </div>
-          </motion.div>
+
+            <div className="w-full sm:w-80">
+              <Input
+                placeholder="Search channels, posts, or ideas..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                icon={<Search className="h-4 w-4" />}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Tabs + Content */}
-      <Section className="py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex gap-2 border-b border-white/10 pb-2">
-            {tabs.map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
-                  activeTab === tab ? 'text-brand-accent border-b-2 border-brand-accent -mb-[2px]' : 'text-white/40 hover:text-white/60'
-                }`}
-              >{tab}</button>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="max-w-xs">
-              <Input placeholder="Search posts..." value={search} onChange={(e) => setSearch(e.target.value)} icon={<Search className="w-4 h-4" />} />
-            </div>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" /> New Post</Button>
-          </div>
-        </div>
+      {loading ? (
+        <Section className="py-16">
+          <LoadingSpinner size="lg" />
+        </Section>
+      ) : null}
 
-        {activeTab === 'Forums' && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {forumCategories.map((cat, i) => (
-              <motion.div key={cat.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-                <GlassCard hover className="p-6 cursor-pointer group">
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-2xl shrink-0`}>
-                      {cat.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-semibold text-white group-hover:text-brand-accent transition-colors">{cat.name}</h3>
-                      <p className="text-xs text-white/40 mt-1 line-clamp-2">{cat.description}</p>
-                      <p className="text-xs text-white/30 mt-2 flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" /> {cat.posts} posts
-                      </p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-brand-accent transition-colors shrink-0 mt-1" />
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'Trending' && (
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Posts */}
-            <div className="lg:col-span-2 space-y-4">
-              {trendingPosts.map((post, i) => (
-                <motion.div key={post.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                  <GlassCard hover className="p-5 cursor-pointer">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-xs font-bold text-white shrink-0">
-                        {post.avatar}
+      {!loading && activeTab === 'Channels' ? (
+        <Section className="py-8">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {filteredCategories.map((category, index) => {
+              const key = category.name.toLowerCase();
+              const Icon = categoryIcons[key] || Sparkles;
+              return (
+                <motion.div
+                  key={category.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <GlassCard hover className="group h-full p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="rounded-2xl bg-brand-accent/10 p-3 text-brand-accent">
+                        <Icon className="h-6 w-6" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {post.isPinned && <Pin className="w-3 h-3 text-brand-accent" />}
-                          <h4 className="font-heading font-semibold text-white text-sm hover:text-brand-accent transition-colors line-clamp-1">{post.title}</h4>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {post.tags.map((t) => (
-                            <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 flex items-center gap-0.5">
-                              <Hash className="w-2 h-2" />{t}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-white/30">
-                          <span>{post.author}</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.timeAgo}</span>
-                          <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{post.likes}</span>
-                          <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{post.replies}</span>
-                          <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views}</span>
-                        </div>
+                      <Badge variant="primary">{category.postCount} posts</Badge>
+                    </div>
+                    <h3 className="mt-5 font-heading text-2xl font-semibold">{category.name}</h3>
+                    <p className="mt-3 text-sm leading-6 text-white/58">{category.description}</p>
+                  </GlassCard>
+                </motion.div>
+              );
+            })}
+          </div>
+        </Section>
+      ) : null}
+
+      {!loading && activeTab === 'Signal Feed' ? (
+        <Section className="py-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+            <div className="space-y-4">
+              {filteredPosts.map((post, index) => (
+                <motion.button
+                  type="button"
+                  key={post.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.04 }}
+                  onClick={() => setSelectedPostId(post.id)}
+                  className="w-full text-left"
+                >
+                  <GlassCard className={`p-6 transition-all ${selectedPost?.id === post.id ? 'ring-2 ring-brand-accent' : ''}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {post.isPinned ? <Badge variant="accent">Pinned</Badge> : null}
+                      {post.category?.name ? <Badge variant="primary">{post.category.name}</Badge> : null}
+                    </div>
+                    <h2 className="mt-4 font-heading text-2xl font-bold">{post.title}</h2>
+                    <p className="mt-3 text-sm leading-6 text-white/58">{post.content}</p>
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-sm">
+                      <div className="text-white/45">
+                        {post.user?.firstName || 'Robotix'} {post.user?.lastName ? `${post.user.lastName.charAt(0)}.` : ''}
+                      </div>
+                      <div className="flex items-center gap-4 text-white/45">
+                        <span className="inline-flex items-center gap-1"><MessageCircle className="h-4 w-4" /> {post._count?.comments || 0}</span>
+                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </GlassCard>
-                </motion.div>
+                </motion.button>
               ))}
             </div>
 
-            {/* Sidebar — Top Contributors */}
-            <div className="space-y-6">
-              <GlassCard className="p-6">
-                <h3 className="font-heading font-semibold text-white mb-4 flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-brand-accent" /> Top Contributors
-                </h3>
-                <div className="space-y-3">
-                  {topContributors.map((user, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                      <span className="text-xs font-bold text-white/30 w-5">{i + 1}</span>
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-[10px] font-bold text-white">
-                        {user.avatar}
+            <aside className="space-y-5">
+              <GlassCard className="p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-brand-accent" />
+                  <h3 className="font-heading text-xl font-bold">Thread detail</h3>
+                </div>
+                {selectedPost ? (
+                  <>
+                    <h4 className="font-heading text-lg font-semibold text-white">{selectedPost.title}</h4>
+                    <p className="mt-2 text-sm text-white/58">{selectedPost.content}</p>
+                    <div className="mt-4 border-t border-white/10 pt-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-white">Comments</p>
+                        <span className="text-xs text-white/40">{comments.length} loaded</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                        <p className="text-[10px] text-white/30">{user.points} pts · {user.posts} posts</p>
-                      </div>
-                      <Badge variant={user.badge === 'Expert' ? 'accent' : 'primary'} className="text-[10px]">{user.badge}</Badge>
+                      {commentsLoading ? (
+                        <LoadingSpinner />
+                      ) : comments.length === 0 ? (
+                        <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
+                          {selectedPost.id.startsWith('post-')
+                            ? 'This preview thread does not have live comments attached yet.'
+                            : 'No comments yet. Start the conversation.'}
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {comments.map((comment) => (
+                            <div key={comment.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-sm font-medium text-white">
+                                  {comment.user?.firstName || 'Community'} {comment.user?.lastName ? `${comment.user.lastName.charAt(0)}.` : ''}
+                                </p>
+                                <span className="text-xs text-white/40">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              <p className="mt-2 text-sm leading-6 text-white/58">{comment.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
+
+                    <div className="mt-4">
+                      <Textarea
+                        value={newComment}
+                        onChange={(event) => setNewComment(event.target.value)}
+                        placeholder="Reply to this thread..."
+                        className="min-h-[110px]"
+                      />
+                      <div className="mt-3 flex gap-3">
+                        <Button onClick={handleComment} loading={commenting} icon={<Send className="h-4 w-4" />}>
+                          Post comment
+                        </Button>
+                        {!isAuthenticated ? <span className="self-center text-xs text-white/40">Sign in required</span> : null}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-white/45">Select a thread to view comments and join the discussion.</p>
+                )}
+              </GlassCard>
+
+              <GlassCard className="p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-brand-accent" />
+                  <h3 className="font-heading text-xl font-bold">Publish next</h3>
+                </div>
+                <div className="space-y-3">
+                  {creatorPipelines.map((pipeline) => (
+                    <Link
+                      key={pipeline.title}
+                      href={pipeline.destination}
+                      className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white"
+                    >
+                      <p className="font-semibold text-white">{pipeline.title}</p>
+                      <p className="mt-2">{pipeline.detail}</p>
+                    </Link>
                   ))}
                 </div>
               </GlassCard>
-            </div>
+            </aside>
           </div>
-        )}
+        </Section>
+      ) : null}
 
-        {activeTab === 'Mentors' && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mentors.map((mentor, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                <GlassCard className="p-6 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-xl font-bold text-white mx-auto mb-4">
-                    {mentor.avatar}
+      {!loading && activeTab === 'Mentors' ? (
+        <Section className="py-8">
+          <div className="grid gap-5 md:grid-cols-3">
+            {mentorCircles.map((mentor) => (
+              <GlassCard key={mentor.name} className="p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="rounded-2xl bg-brand-secondary/10 p-3 text-brand-secondary">
+                    <Users className="h-6 w-6" />
                   </div>
-                  <h3 className="font-heading font-semibold text-white">{mentor.name}</h3>
-                  <p className="text-xs text-white/40 mb-3">{mentor.specialty}</p>
-                  <Badge variant={mentor.available ? 'primary' : 'danger'} className="mb-4">
-                    {mentor.available ? 'Available' : 'Busy'}
-                  </Badge>
-                  <div>
-                    <Button size="sm" variant={mentor.available ? 'primary' : 'ghost'} disabled={!mentor.available} className="w-full">
-                      {mentor.available ? 'Book Session' : 'Not Available'}
-                    </Button>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-
-            {/* Become a mentor CTA */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <GlassCard className="p-6 text-center border-2 border-dashed border-white/10 flex flex-col items-center justify-center h-full">
-                <Award className="w-10 h-10 text-brand-accent mb-4" />
-                <h3 className="font-heading font-semibold text-white mb-2">Become a Mentor</h3>
-                <p className="text-xs text-white/40 mb-4">Share your expertise and guide the next generation of robotics engineers in Zambia.</p>
-                <Button variant="secondary" size="sm">Apply Now</Button>
+                  <Badge variant={mentor.availability === 'Available' ? 'success' : 'accent'}>{mentor.availability}</Badge>
+                </div>
+                <h2 className="font-heading text-xl font-semibold">{mentor.name}</h2>
+                <p className="mt-3 text-sm leading-6 text-white/58">{mentor.specialty}</p>
               </GlassCard>
-            </motion.div>
+            ))}
           </div>
-        )}
-      </Section>
+        </Section>
+      ) : null}
 
       <Footer />
     </main>

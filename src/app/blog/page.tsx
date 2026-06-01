@@ -95,13 +95,13 @@ export default function BlogPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <Badge variant="accent" className="mb-4">📰 Blog & News</Badge>
+            <Badge variant="accent" className="mb-4">📰 Robotix Stories & Updates</Badge>
             <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">
               Robotix <span className="text-gradient">Insights</span>
             </h1>
             <p className="text-lg text-white/60 max-w-2xl mx-auto">
-              Stay updated with the latest in robotics, IoT, AI, and technology.
-              Tutorials, news, and insights from our community.
+              Follow Robotix Institute updates, partnership highlights, learner showcases,
+              school activities, and practical robotics stories from Zambia.
             </p>
           </motion.div>
 
@@ -196,7 +196,7 @@ export default function BlogPage() {
           <EmptyState
             icon={<Newspaper className="w-8 h-8" />}
             title="No Posts Yet"
-            description="Blog posts are coming soon. Stay tuned for robotics insights and tutorials!"
+            description="Robotix stories, partnership highlights, learner showcases, and institute updates will appear here as the public content library grows."
           />
         ) : (
           <>

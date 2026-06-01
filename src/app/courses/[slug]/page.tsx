@@ -72,6 +72,7 @@ interface CoursePayload {
   enrolledCount: number;
   viewerEnrollment?: { progress: number; completed: boolean } | null;
   completedLessonIds?: string[];
+  viewerCertificate?: { certCode: string; title: string; issueDate: string } | null;
 }
 
 const lessonTypeIcons: Record<string, ReactNode> = {
@@ -173,7 +174,11 @@ export default function CourseDetailPage() {
 
     setLessonBusy(lessonId);
     try {
-      type ProgressRes = { courseProgressApprox?: number; lessonId?: string };
+      type ProgressRes = {
+        courseProgressApprox?: number;
+        lessonId?: string;
+        certificate?: { certCode: string; title: string; issueDate: string } | null;
+      };
       const res = await post<ProgressRes>(`/lessons/${lessonId}/progress`, {
         completed: true as const,
       });
@@ -200,6 +205,7 @@ export default function CourseDetailPage() {
             : c.viewerEnrollment,
         };
       });
+      await fetchCourse();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Could not save progress');
     } finally {
@@ -347,9 +353,28 @@ export default function CourseDetailPage() {
                   </Button>
                 )}
 
-                <Button variant="secondary" className="w-full opacity-70" disabled icon={<Award className="w-4 h-4" />}>
-                  Certificate (coming soon)
-                </Button>
+                {course.viewerCertificate ? (
+                  <Link href={`/verify/${course.viewerCertificate.certCode}`}>
+                    <Button variant="secondary" className="w-full" icon={<Award className="w-4 h-4" />}>
+                      View Certificate
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="w-full opacity-70"
+                    disabled
+                    icon={<Award className="w-4 h-4" />}
+                  >
+                    {displayProgress >= 99 ? 'Issuing certificate...' : 'Certificate unlocks at 100%'}
+                  </Button>
+                )}
+
+                {course.viewerCertificate ? (
+                  <p className="mt-3 text-center text-[11px] text-white/45">
+                    Verification code: {course.viewerCertificate.certCode}
+                  </p>
+                ) : null}
 
                 {!course.viewerEnrollment && (
                   <p className="text-[11px] text-white/35 mt-3 text-center">

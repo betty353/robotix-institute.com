@@ -51,6 +51,26 @@ async function executeJavaScript(code: string, timeout: number, input?: string):
   let output = '';
   
   try {
+    const blockedTokens = [
+      'window',
+      'document',
+      'localStorage',
+      'sessionStorage',
+      'fetch',
+      'XMLHttpRequest',
+      'WebSocket',
+      'eval',
+      'Function',
+      'constructor',
+      'import(',
+      'navigator',
+      'location',
+    ];
+    const foundToken = blockedTokens.find((token) => code.includes(token));
+    if (foundToken) {
+      throw new Error(`Unsafe JavaScript token blocked: ${foundToken}`);
+    }
+
     // Create a sandboxed console
     const logs: string[] = [];
     const mockConsole = {
@@ -61,17 +81,13 @@ async function executeJavaScript(code: string, timeout: number, input?: string):
     };
 
     // Create a sandboxed function
-    const sandboxedCode = `
-      (function(console, input) {
-        ${code}
-      })
-    `;
+    const sandboxedCode = `"use strict";\n${code}`;
 
     // Execute with timeout
-    const result = await Promise.race([
+    await Promise.race([
       new Promise<void>((resolve, reject) => {
         try {
-          const fn = eval(sandboxedCode);
+          const fn = new Function('console', 'input', sandboxedCode);
           fn(mockConsole, input);
           resolve();
         } catch (e) {
@@ -107,8 +123,29 @@ async function executePython(code: string, timeout: number, input?: string): Pro
   const startTime = performance.now();
   
   try {
-    // Check if Pyodide is available
-    if (typeof window !== 'undefined' && (window as any).loadPyodide) {
+    if (typeof window === 'undefined') {
+      throw new Error('Python execution is only available in the browser.');
+    }
+
+    if (!(window as any).loadPyodide) {
+      await new Promise<void>((resolve, reject) => {
+        const existing = document.querySelector<HTMLScriptElement>('script[data-pyodide]');
+        if (existing) {
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(new Error('Pyodide failed to load')), { once: true });
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+        script.async = true;
+        script.dataset.pyodide = 'true';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Pyodide failed to load'));
+        document.head.appendChild(script);
+      });
+    }
+
+    if ((window as any).loadPyodide) {
       const pyodide = await (window as any).loadPyodide();
       
       // Redirect stdout
@@ -137,8 +174,7 @@ async function executePython(code: string, timeout: number, input?: string): Pro
       };
     }
 
-    // Fallback to simulation if Pyodide not available
-    return simulatePythonExecution(code);
+    throw new Error('Pyodide is unavailable. Python code was not executed.');
   } catch (error) {
     const executionTime = performance.now() - startTime;
     return {
@@ -148,56 +184,6 @@ async function executePython(code: string, timeout: number, input?: string): Pro
       executionTime,
     };
   }
-}
-
-// Simulate Python execution for common patterns
-function simulatePythonExecution(code: string): ExecutionResult {
-  const startTime = performance.now();
-  const outputs: string[] = [];
-  const lines = code.split('\n');
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    // Handle print statements
-    const printMatch = trimmed.match(/^print\s*\(\s*["'](.*)["']\s*\)$/);
-    if (printMatch) {
-      outputs.push(printMatch[1]);
-      continue;
-    }
-
-    // Handle print with variables (simplified)
-    const printVarMatch = trimmed.match(/^print\s*\(\s*(.+)\s*\)$/);
-    if (printVarMatch) {
-      const expr = printVarMatch[1];
-      // Try to evaluate simple expressions
-      if (/^[\d\s+\-*/()]+$/.test(expr)) {
-        try {
-          outputs.push(String(eval(expr)));
-        } catch {
-          outputs.push(`[Result of: ${expr}]`);
-        }
-      } else {
-        outputs.push(`[Result of: ${expr}]`);
-      }
-    }
-  }
-
-  const executionTime = performance.now() - startTime;
-
-  if (outputs.length === 0) {
-    return {
-      success: true,
-      output: '# Python code parsed successfully\n# (Pyodide not loaded - showing simulation)\n# Install Pyodide for full Python execution',
-      executionTime,
-    };
-  }
-
-  return {
-    success: true,
-    output: outputs.join('\n'),
-    executionTime,
-  };
 }
 
 // Simulate execution for compiled languages

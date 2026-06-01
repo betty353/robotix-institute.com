@@ -32,6 +32,15 @@ export function truncate(str: string, length: number): string {
   return str.substring(0, length) + '...';
 }
 
+export function sanitizeText(value: string, maxLength = 500): string {
+  return value
+    .replace(/[<>]/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+=/gi, '')
+    .trim()
+    .slice(0, maxLength);
+}
+
 export function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
