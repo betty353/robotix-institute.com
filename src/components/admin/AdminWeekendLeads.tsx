@@ -173,9 +173,9 @@ export default function AdminWeekendLeads() {
               <UserRound className="mr-1 h-3 w-3" />
               Parent Lead Inbox
             </Badge>
-            <h3 className="font-heading text-2xl font-semibold">Weekend class sign-ups from parents</h3>
+            <h3 className="font-heading text-2xl font-semibold">Child sign-ups from parents</h3>
             <p className="mt-3 text-sm leading-6 text-white/60">
-              This panel gives administrators the parent contact details, child learning preferences, and scheduling signals coming from the weekend-classes page.
+              Parent and child learning enquiries from the sign-up form appear here for admin follow-up.
             </p>
           </div>
 

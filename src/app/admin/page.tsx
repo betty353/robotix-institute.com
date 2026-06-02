@@ -35,6 +35,7 @@ import Footer from '@/components/layout/Footer';
 import AdminContactInbox from '@/components/admin/AdminContactInbox';
 import AdminGameLabQueue from '@/components/admin/AdminGameLabQueue';
 import AdminTeamOps from '@/components/admin/AdminTeamOps';
+import AdminWeekendLeads from '@/components/admin/AdminWeekendLeads';
 import { Badge, Button, GlassCard, Input, ProgressBar, Section } from '@/components/ui';
 import { useAuthStore } from '@/store';
 import { formatDate } from '@/lib/utils';
@@ -583,6 +584,7 @@ export default function AdminPage() {
             </div>
 
             <AdminContactInbox />
+            <AdminWeekendLeads />
           </div>
         </Section>
       )}

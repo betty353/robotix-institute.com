@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(createErrorResponse('Unauthorized'), { status: 401 });
     }
 
-    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    const denied = await requireRole(user, ['ADMIN']);
     if (denied) return denied;
 
     const { searchParams } = new URL(request.url);
@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(createErrorResponse('Unauthorized'), { status: 401 });
     }
 
-    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    const denied = await requireRole(user, ['ADMIN']);
     if (denied) return denied;
 
     const body = await request.json();
