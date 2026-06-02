@@ -9,7 +9,7 @@ const ContentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://avatars.githubusercontent.com https://cdn.jsdelivr.net https://www.robotixinstitute.io https://i.ytimg.com https://resources.finalsite.net https://static.wixstatic.com https://bongohive.co.zm",
+  "img-src 'self' data: blob: https://images.unsplash.com https://avatars.githubusercontent.com https://unavatar.io https://cdn.jsdelivr.net https://www.robotixinstitute.io https://i.ytimg.com https://resources.finalsite.net https://static.wixstatic.com https://bongohive.co.zm",
   "connect-src 'self' ws: wss: https: data:",
   "worker-src 'self' blob:",
   "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
@@ -31,6 +31,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'https', hostname: 'unavatar.io' },
       { protocol: 'https', hostname: 'cdn.jsdelivr.net' },
       { protocol: 'https', hostname: 'bongohive.co.zm' },
       { protocol: 'https', hostname: 'www.robotixinstitute.io' },

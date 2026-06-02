@@ -348,10 +348,42 @@ export default function AboutPage() {
         />
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {robotixProfile.people.map((person) => (
-            <GlassCard key={person.name} className="p-6">
-              <div className="text-xs uppercase tracking-[0.24em] text-brand-secondary">{person.source}</div>
-              <h2 className="mt-3 font-heading text-2xl font-semibold text-white">{person.name}</h2>
-              <p className="mt-3 text-sm leading-6 text-white/60">{person.role}</p>
+            <GlassCard key={person.name} className="group overflow-hidden p-0">
+              <div className="relative h-full bg-white/[0.04] p-6">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-brand-primary/18 via-brand-secondary/12 to-transparent opacity-80" />
+                <div className="relative flex items-center gap-4">
+                  <div className="relative h-20 w-20 flex-none overflow-hidden rounded-3xl border border-white/15 bg-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
+                    <div className="absolute inset-0 flex items-center justify-center bg-brand-dark/70 text-sm font-semibold text-white/75">
+                      {person.name.split(' ').map((part) => part[0]).join('')}
+                    </div>
+                    {person.imageSrc ? (
+                      <Image
+                        src={person.imageSrc}
+                        alt={`${person.name} profile`}
+                        fill
+                        sizes="80px"
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs uppercase tracking-[0.24em] text-brand-secondary">{person.source}</div>
+                    <h2 className="mt-3 font-heading text-2xl font-semibold text-white">{person.name}</h2>
+                  </div>
+                </div>
+                <p className="relative mt-4 text-sm leading-6 text-white/68">{person.role}</p>
+                {person.linkedin ? (
+                  <Link
+                    href={person.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="relative mt-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-secondary/50 hover:bg-brand-secondary/16"
+                  >
+                    View LinkedIn profile
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                ) : null}
+              </div>
             </GlassCard>
           ))}
         </div>
