@@ -192,7 +192,7 @@ export default function AdminTeamOps() {
             <div className="mt-5 rounded-2xl border border-brand-secondary/20 bg-brand-secondary/10 p-4">
               <div className="text-sm font-semibold text-white">Latest invite link</div>
               <p className="mt-2 break-all text-xs leading-5 text-white/60">{latestInviteUrl}</p>
-              <Button size="sm" variant="secondary" className="mt-3" icon={<Copy className="h-4 w-4" />} onClick={() => navigator.clipboard?.writeText(latestInviteUrl)}>
+              <Button type="button" size="sm" variant="secondary" className="mt-3" icon={<Copy className="h-4 w-4" />} onClick={() => navigator.clipboard?.writeText(latestInviteUrl)}>
                 Copy link
               </Button>
             </div>

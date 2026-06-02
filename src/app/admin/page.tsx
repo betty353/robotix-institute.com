@@ -261,9 +261,9 @@ export default function AdminPage() {
       <Navbar />
 
       <section className="relative overflow-hidden border-b border-white/10 pt-28">
-        <div className="aurora-bg absolute inset-0 opacity-80" />
-        <div className="bg-grid absolute inset-0 opacity-10" />
-        <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+        <div className="aurora-bg pointer-events-none absolute inset-0 opacity-80" />
+        <div className="bg-grid pointer-events-none absolute inset-0 opacity-10" />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
           <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
             <div>
               <Badge variant="accent" className="mb-4">
@@ -309,6 +309,7 @@ export default function AdminPage() {
             <div className="flex flex-wrap gap-2">
               {tabs.map((tab) => (
                 <button
+                  type="button"
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
@@ -326,10 +327,10 @@ export default function AdminPage() {
               <div className="w-full sm:w-64">
                 <Input placeholder="Search systems, schools, creators..." icon={<Search className="h-4 w-4" />} />
               </div>
-              <button className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
+              <button type="button" className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
                 <Bell className="h-5 w-5" />
               </button>
-              <button className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
+              <button type="button" className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
                 <Settings className="h-5 w-5" />
               </button>
             </div>
