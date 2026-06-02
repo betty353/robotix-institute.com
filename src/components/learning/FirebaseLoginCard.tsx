@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 import { Lock, LogIn, LogOut, Mail } from 'lucide-react';
 import { Badge, Button, GlassCard, Input } from '@/components/ui';
 import { isFirebaseConfigured, signInWithFirebaseEmail, signInWithGoogle, signOutFirebase } from '@/lib/firebase';
@@ -26,6 +27,33 @@ export function FirebaseLoginCard() {
       setLoading(false);
     }
   };
+
+  if (!firebaseReady) {
+    return (
+      <GlassCard className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5 text-brand-accent" />
+            <h2 className="font-heading text-lg font-bold">Learning account</h2>
+          </div>
+          <Badge variant="primary">Coming online</Badge>
+        </div>
+
+        <p className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm leading-6 text-white/65">
+          Learning sync, saved progress, and Firebase sign-in are being connected. Public lessons are still available while the account layer is prepared.
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/learn">
+            <Button type="button" size="sm" variant="secondary">Browse lessons</Button>
+          </Link>
+          <Link href="/login">
+            <Button type="button" size="sm" variant="ghost">Use main login</Button>
+          </Link>
+        </div>
+      </GlassCard>
+    );
+  }
 
   return (
     <GlassCard className="p-5">
@@ -71,11 +99,6 @@ export function FirebaseLoginCard() {
         </Button>
       </form>
       )}
-      {!firebaseReady ? (
-        <p className="mt-3 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-100">
-          Add valid `NEXT_PUBLIC_FIREBASE_*` values to enable Firebase login, progress sync, and saved learning state.
-        </p>
-      ) : null}
       <p className="mt-3 text-xs text-white/45">{status}</p>
     </GlassCard>
   );

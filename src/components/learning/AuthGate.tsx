@@ -19,7 +19,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             <Lock className="mb-4 h-8 w-8 text-brand-accent" />
             <h1 className="font-heading text-2xl font-bold text-white">Sign in to continue</h1>
             <p className="mt-2 text-white/55">
-              Dashboard, Build Studio, lesson progress, XP, and leaderboard scores require Firebase Auth.
+              Dashboard, Build Studio, lesson progress, XP, and leaderboard scores need a connected learning account.
             </p>
             {error ? <p className="mt-3 rounded-lg bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
             <Link href="/learn">
