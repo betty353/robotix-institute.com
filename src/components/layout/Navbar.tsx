@@ -9,7 +9,7 @@ import {
   Menu, X, ChevronDown,
   GraduationCap, Code, Cpu, Gamepad2, Trophy,
   Users, Bot, Wifi, BookOpen, Bell, Search,
-  Map, BarChart3, Building2, Radio, Shield, Zap, CalendarDays
+  Map, BarChart3, Building2, Radio, Shield, Zap, CalendarDays, ReceiptText
 } from 'lucide-react';
 
 const navItems = [
@@ -407,6 +407,15 @@ export default function Navbar() {
                     title="Team Workspace"
                   >
                     <CalendarDays className="w-5 h-5" />
+                  </Link>
+                )}
+                {(user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                  <Link
+                    href="/accounts"
+                    className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                    title="Accounts Panel"
+                  >
+                    <ReceiptText className="w-5 h-5" />
                   </Link>
                 )}
                 <Link

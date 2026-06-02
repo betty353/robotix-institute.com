@@ -115,7 +115,7 @@ export async function PATCH(request: NextRequest) {
           where: {
             id: payload.assignedToId,
             isActive: true,
-            role: { in: ['ADMIN', 'INSTRUCTOR'] },
+            role: { in: ['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR'] },
           },
           select: { id: true },
         });

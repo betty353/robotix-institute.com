@@ -31,6 +31,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AdminContactInbox from '@/components/admin/AdminContactInbox';
 import AdminGameLabQueue from '@/components/admin/AdminGameLabQueue';
+import AdminTeamOps from '@/components/admin/AdminTeamOps';
 import AdminWeekendLeads from '@/components/admin/AdminWeekendLeads';
 import { Badge, Button, GlassCard, Input, ProgressBar, Section } from '@/components/ui';
 import { useAuthStore } from '@/store';
@@ -77,7 +78,7 @@ type AdminStatsPayload = {
   }>;
 };
 
-const tabs = ['Command Center', 'Governance', 'Programs', 'Commerce', 'Game Lab', 'Settings'] as const;
+const tabs = ['Command Center', 'Governance', 'Team Ops', 'Programs', 'Commerce', 'Game Lab', 'Settings'] as const;
 
 const controlModules = [
   {
@@ -600,6 +601,12 @@ export default function AdminPage() {
               </GlassCard>
             ))}
           </div>
+        </Section>
+      )}
+
+      {activeTab === 'Team Ops' && (
+        <Section className="py-8">
+          <AdminTeamOps />
         </Section>
       )}
 

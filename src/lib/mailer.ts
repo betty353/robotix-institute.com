@@ -133,3 +133,41 @@ export async function sendOpsNotification(args: {
     replyTo: args.replyTo,
   });
 }
+
+export async function sendTeamInviteEmail(args: {
+  to: string;
+  firstName: string;
+  role: string;
+  inviteUrl: string;
+  expiresAt: Date;
+}) {
+  const safeName = escapeHtml(args.firstName);
+  const safeRole = escapeHtml(args.role);
+  const safeUrl = escapeHtml(args.inviteUrl);
+  const expiresLabel = args.expiresAt.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return sendEmail({
+    to: args.to,
+    subject: 'You have been invited to Robotix Institute',
+    text: `Hello ${args.firstName}, you have been invited as ${args.role}. Accept your invite here: ${args.inviteUrl}. This invite expires on ${expiresLabel}.`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#10213f">
+        <h2 style="margin-bottom:12px;">Robotix Institute team invitation</h2>
+        <p>Hello ${safeName},</p>
+        <p>You have been invited to join the Robotix Institute website team as <strong>${safeRole}</strong>.</p>
+        <p style="margin:24px 0;">
+          <a href="${safeUrl}" style="background:#57D4FF;color:#10213f;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700;">
+            Accept invitation
+          </a>
+        </p>
+        <p>If the button does not open, copy and paste this link into your browser:</p>
+        <p><a href="${safeUrl}">${safeUrl}</a></p>
+        <p>This invite expires on ${escapeHtml(expiresLabel)}.</p>
+      </div>
+    `,
+  });
+}

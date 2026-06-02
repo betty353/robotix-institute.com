@@ -5,7 +5,7 @@ export interface User {
   lastName: string;
   /** Gamification lifetime points */
   points?: number;
-  role: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT' | 'GUEST';
+  role: 'ADMIN' | 'ACCOUNTANT' | 'INSTRUCTOR' | 'STUDENT' | 'GUEST';
   avatar?: string;
   bio?: string;
   githubUrl?: string;

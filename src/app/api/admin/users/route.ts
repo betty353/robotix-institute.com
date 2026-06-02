@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData: Record<string, unknown> = {};
-    if (role && ['STUDENT', 'INSTRUCTOR', 'ADMIN'].includes(role)) {
+    if (role && ['STUDENT', 'INSTRUCTOR', 'ACCOUNTANT', 'ADMIN'].includes(role)) {
       updateData.role = role;
     }
     if (typeof isActive === 'boolean') {

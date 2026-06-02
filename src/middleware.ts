@@ -7,10 +7,12 @@ const PROTECTED_PREFIXES = [
   '/dashboard',
   '/notifications',
   '/team',
+  '/accounts',
 ];
 
 const ADMIN_ONLY_PREFIXES = ['/admin'];
 const STAFF_ONLY_PREFIXES = ['/team'];
+const ACCOUNTS_ONLY_PREFIXES = ['/accounts'];
 
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
@@ -61,6 +63,7 @@ export function middleware(req: NextRequest) {
 
   const isAdminOnly = ADMIN_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const isStaffOnly = STAFF_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  const isAccountsOnly = ACCOUNTS_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
   if (!requireAuth && !isAdminOnly) {
     return applySecurityHeaders(NextResponse.next());
@@ -92,6 +95,12 @@ export function middleware(req: NextRequest) {
   }
 
   if (isStaffOnly && user.role !== 'ADMIN' && user.role !== 'INSTRUCTOR') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/';
+    return applySecurityHeaders(NextResponse.redirect(url));
+  }
+
+  if (isAccountsOnly && user.role !== 'ADMIN' && user.role !== 'ACCOUNTANT') {
     const url = req.nextUrl.clone();
     url.pathname = '/';
     return applySecurityHeaders(NextResponse.redirect(url));

@@ -8,13 +8,13 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);
-    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    const denied = await requireRole(user, ['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR']);
     if (denied) return denied;
 
     const staff = await prisma.user.findMany({
       where: {
         isActive: true,
-        role: { in: ['ADMIN', 'INSTRUCTOR'] },
+        role: { in: ['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR'] },
       },
       select: {
         id: true,

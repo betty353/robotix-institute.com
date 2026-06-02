@@ -10,7 +10,7 @@ type TeamUser = {
   id: string;
   firstName: string;
   lastName: string;
-  role: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT' | 'GUEST';
+  role: 'ADMIN' | 'ACCOUNTANT' | 'INSTRUCTOR' | 'STUDENT' | 'GUEST';
   avatar?: string | null;
 };
 

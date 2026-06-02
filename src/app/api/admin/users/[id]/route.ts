@@ -9,7 +9,7 @@ interface Params {
 }
 
 const updateUserSchema = z.object({
-  role: z.enum(['ADMIN', 'INSTRUCTOR', 'STUDENT', 'GUEST']).optional(),
+  role: z.enum(['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR', 'STUDENT', 'GUEST']).optional(),
   isActive: z.boolean().optional(),
   emailVerified: z.boolean().optional(),
 });

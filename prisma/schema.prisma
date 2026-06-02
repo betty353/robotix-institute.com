@@ -12,6 +12,7 @@ datasource db {
 
 enum Role {
   ADMIN
+  ACCOUNTANT
   INSTRUCTOR
   STUDENT
   GUEST
@@ -58,6 +59,8 @@ model User {
   gameProjectLikes     GameProjectLike[]
   teamChatMessages     TeamChatMessage[]
   teamCalendarEvents   TeamCalendarEvent[]
+  assignedTeamCalendarEvents TeamCalendarEvent[] @relation("TeamCalendarAssignee")
+  sentTeamInvites      TeamInvite[] @relation("TeamInviteInviter")
   gamificationLogs     GamificationLog[]
   passwordResetTokens  PasswordResetToken[]
   assignedContactMessages ContactMessage[] @relation("ContactMessageAssignee")
@@ -563,6 +566,12 @@ model Order {
   userId    String
   total     Float
   status    String   @default("pending") // pending, confirmed, shipped, delivered
+  paymentStatus String @default("PENDING") // PENDING, PARTIAL, PAID, WAIVED, REFUNDED
+  paymentMethod String?
+  amountPaid Float @default(0)
+  paymentReference String?
+  accountsNotes String?
+  paidAt DateTime?
   address   String
   phone     String
   createdAt DateTime @default(now())
@@ -571,6 +580,7 @@ model Order {
   items OrderItem[]
 
   @@index([userId])
+  @@index([paymentStatus])
 }
 
 model OrderItem {
@@ -831,6 +841,8 @@ model TeamCalendarEvent {
   title       String
   description String?
   location    String?
+  duty        String?
+  assignedToId String?
   startsAt    DateTime
   endsAt      DateTime
   createdById String
@@ -838,7 +850,29 @@ model TeamCalendarEvent {
   updatedAt   DateTime @updatedAt
 
   createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  assignedTo User? @relation("TeamCalendarAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
 
   @@index([startsAt])
   @@index([createdById])
+  @@index([assignedToId])
+}
+
+model TeamInvite {
+  id          String   @id @default(cuid())
+  email       String
+  firstName   String
+  lastName    String
+  role        Role
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  invitedById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invitedBy User @relation("TeamInviteInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([role])
+  @@index([expiresAt])
 }
