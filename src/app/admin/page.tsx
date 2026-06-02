@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   ArrowRight,
@@ -13,6 +14,7 @@ import {
   Briefcase,
   Building2,
   CalendarDays,
+  ClipboardList,
   Cpu,
   Gamepad2,
   GraduationCap,
@@ -21,6 +23,7 @@ import {
   MessagesSquare,
   Newspaper,
   RadioTower,
+  ReceiptText,
   Search,
   Settings,
   Shield,
@@ -28,6 +31,7 @@ import {
   Sprout,
   Trophy,
   Users,
+  UserRound,
   Wifi,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
@@ -270,6 +274,36 @@ export default function AdminPage() {
     { label: 'Invite team', icon: MailPlus, action: () => setActiveTab('Team Ops') },
   ];
 
+  const dailyActions: Array<
+    | { title: string; detail: string; icon: LucideIcon; href: string }
+    | { title: string; detail: string; icon: LucideIcon; onClick: () => void }
+  > = [
+    {
+      title: 'Messages',
+      detail: 'Contact, careers, and general website enquiries',
+      icon: MessagesSquare,
+      onClick: () => setActiveTab('Messages'),
+    },
+    {
+      title: 'Child sign-ups',
+      detail: 'Parents registering children for learning follow-up',
+      icon: UserRound,
+      onClick: () => setActiveTab('Messages'),
+    },
+    {
+      title: 'Payments',
+      detail: 'Proofs, balances, and account reconciliation',
+      icon: ReceiptText,
+      href: '/accounts',
+    },
+    {
+      title: 'Team requests',
+      detail: 'Materials, support, duties, and company needs',
+      icon: ClipboardList,
+      href: '/team#requests',
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-brand-dark text-white">
       <Navbar />
@@ -295,8 +329,8 @@ export default function AdminPage() {
             <GlassCard className="p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Operations state</p>
-                  <h2 className="mt-2 font-heading text-2xl font-semibold">Ecosystem command layer</h2>
+                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Daily work</p>
+                  <h2 className="mt-2 font-heading text-2xl font-semibold">Admin quick actions</h2>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
                   <span className="h-2 w-2 rounded-full bg-emerald-300" />
@@ -304,17 +338,38 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {[
-                  { label: 'Realtime metrics', value: loading ? 'Syncing' : 'Online' },
-                  { label: 'AI governance', value: 'Active' },
-                  { label: 'Community moderation', value: 'Screening' },
-                  { label: 'School rollout', value: 'Ready' },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                    <div className="text-xs uppercase tracking-[0.24em] text-white/40">{item.label}</div>
-                    <div className="mt-3 text-lg font-semibold">{item.value}</div>
-                  </div>
-                ))}
+                {dailyActions.map((item) => {
+                  const content = (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-brand-accent/10 p-2 text-brand-accent">
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <div className="text-sm font-semibold text-white">{item.title}</div>
+                      </div>
+                      <p className="mt-3 text-xs leading-5 text-white/50">{item.detail}</p>
+                    </>
+                  );
+
+                  if ('href' in item) {
+                    return (
+                      <Link key={item.title} href={item.href} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left transition hover:border-brand-accent/35 hover:bg-brand-accent/8">
+                        {content}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={item.title}
+                      type="button"
+                      onClick={item.onClick}
+                      className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left transition hover:border-brand-accent/35 hover:bg-brand-accent/8"
+                    >
+                      {content}
+                    </button>
+                  );
+                })}
               </div>
             </GlassCard>
           </div>

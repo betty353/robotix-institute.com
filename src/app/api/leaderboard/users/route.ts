@@ -3,6 +3,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { createApiResponse, createErrorResponse, getPaginationParams } from '@/lib/api-utils';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Combined gamification leaderboard.
  * GET ?period=all|weekly&limit=50

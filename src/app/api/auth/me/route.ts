@@ -3,6 +3,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { createApiResponse, createErrorResponse } from '@/lib/api-utils';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const jwtUser = getUserFromRequest(request);

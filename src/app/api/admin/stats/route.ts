@@ -3,6 +3,8 @@ import { getUserFromRequest, requireRole } from '@/lib/auth';
 import { createApiResponse, createErrorResponse } from '@/lib/api-utils';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // Get admin dashboard stats
 export async function GET(request: NextRequest) {
   try {
