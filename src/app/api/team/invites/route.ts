@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = crypto.randomBytes(32).toString('base64url');
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 2);
     const inviteUrl = `${getAppOrigin()}/invite/${encodeURIComponent(token)}`;
 
     const invite = await prisma.teamInvite.create({
@@ -111,7 +111,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      createApiResponse({ invite, inviteUrl, emailSent }, emailSent ? 'Invitation sent' : 'Invitation created. Email delivery is not configured, so copy the invite link.'),
+      createApiResponse(
+        { invite, inviteUrl, emailSent },
+        emailSent
+          ? 'Invitation sent. The invite link expires in 2 hours.'
+          : 'Invitation created. Email delivery is not configured, so copy the invite link. The link expires in 2 hours.'
+      ),
       { status: 201 }
     );
   } catch (error) {

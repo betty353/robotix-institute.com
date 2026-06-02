@@ -144,16 +144,19 @@ export async function sendTeamInviteEmail(args: {
   const safeName = escapeHtml(args.firstName);
   const safeRole = escapeHtml(args.role);
   const safeUrl = escapeHtml(args.inviteUrl);
-  const expiresLabel = args.expiresAt.toLocaleDateString('en-US', {
+  const expiresLabel = args.expiresAt.toLocaleString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
   });
 
   return sendEmail({
     to: args.to,
     subject: 'You have been invited to Robotix Institute',
-    text: `Hello ${args.firstName}, you have been invited as ${args.role}. Accept your invite here: ${args.inviteUrl}. This invite expires on ${expiresLabel}.`,
+    text: `Hello ${args.firstName}, you have been invited as ${args.role}. Accept your invite here: ${args.inviteUrl}. This invite expires in 2 hours, at ${expiresLabel}.`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#10213f">
         <h2 style="margin-bottom:12px;">Robotix Institute team invitation</h2>
@@ -166,7 +169,7 @@ export async function sendTeamInviteEmail(args: {
         </p>
         <p>If the button does not open, copy and paste this link into your browser:</p>
         <p><a href="${safeUrl}">${safeUrl}</a></p>
-        <p>This invite expires on ${escapeHtml(expiresLabel)}.</p>
+        <p>This invite expires in <strong>2 hours</strong>, at ${escapeHtml(expiresLabel)}.</p>
       </div>
     `,
   });

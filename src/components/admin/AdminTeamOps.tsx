@@ -73,6 +73,7 @@ export default function AdminTeamOps() {
   const [inviteForm, setInviteForm] = useState(emptyInvite);
   const [timetableForm, setTimetableForm] = useState(emptyTimetable);
   const [latestInviteUrl, setLatestInviteUrl] = useState('');
+  const [latestInviteExpiresAt, setLatestInviteExpiresAt] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingInvite, setSavingInvite] = useState(false);
   const [savingTimetable, setSavingTimetable] = useState(false);
@@ -124,6 +125,7 @@ export default function AdminTeamOps() {
       if (!response.ok) throw new Error(json?.message || 'Invite could not be created.');
       setInvites((current) => [json.data.invite, ...current]);
       setLatestInviteUrl(json.data.inviteUrl || '');
+      setLatestInviteExpiresAt(json.data.invite?.expiresAt || '');
       setInviteForm(emptyInvite);
     } catch (inviteError) {
       setError(inviteError instanceof Error ? inviteError.message : 'Invite could not be created.');
@@ -191,6 +193,9 @@ export default function AdminTeamOps() {
           {latestInviteUrl ? (
             <div className="mt-5 rounded-2xl border border-brand-secondary/20 bg-brand-secondary/10 p-4">
               <div className="text-sm font-semibold text-white">Latest invite link</div>
+              <p className="mt-1 text-xs text-brand-secondary">
+                Expires in 2 hours{latestInviteExpiresAt ? `, at ${formatDateTime(latestInviteExpiresAt)}` : ''}.
+              </p>
               <p className="mt-2 break-all text-xs leading-5 text-white/60">{latestInviteUrl}</p>
               <Button type="button" size="sm" variant="secondary" className="mt-3" icon={<Copy className="h-4 w-4" />} onClick={() => navigator.clipboard?.writeText(latestInviteUrl)}>
                 Copy link
