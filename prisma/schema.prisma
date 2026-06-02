@@ -578,9 +578,37 @@ model Order {
 
   user  User        @relation(fields: [userId], references: [id])
   items OrderItem[]
+  paymentProofs PaymentProof[]
 
   @@index([userId])
   @@index([paymentStatus])
+}
+
+model PaymentProof {
+  id          String   @id @default(cuid())
+  orderId     String?
+  parentName  String
+  parentEmail String
+  parentPhone String
+  amount      Float
+  method      String
+  reference   String?
+  note        String?
+  status      String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  proofDataUrl String?
+  proofMime    String?
+  proofName    String?
+  proofSize    Int?
+  verifiedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([parentEmail])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {

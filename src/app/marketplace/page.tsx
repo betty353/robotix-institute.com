@@ -14,6 +14,7 @@ import {
   Shield,
   HeadphonesIcon,
   Mail,
+  ReceiptText,
 } from 'lucide-react';
 
 interface Product {
@@ -329,6 +330,11 @@ export default function MarketplacePage() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link href="/contact">
               <Button>Contact Robotix</Button>
+            </Link>
+            <Link href="/payment-proof">
+              <Button variant="secondary" icon={<ReceiptText className="h-4 w-4" />}>
+                Submit payment proof
+              </Button>
             </Link>
             <Link href="/partners">
               <Button variant="secondary">See school programs</Button>
