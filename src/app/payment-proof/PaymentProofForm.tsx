@@ -47,9 +47,9 @@ export default function PaymentProofForm() {
   return (
     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
       <div className="space-y-5">
-        <Link href="/marketplace" className="inline-flex items-center gap-2 text-sm text-white/55 transition hover:text-brand-secondary">
+        <Link href="/courses" className="inline-flex items-center gap-2 text-sm text-white/55 transition hover:text-brand-secondary">
           <ArrowLeft className="h-4 w-4" />
-          Back to marketplace
+          Back to courses
         </Link>
 
         <div>

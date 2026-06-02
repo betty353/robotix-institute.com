@@ -12,15 +12,18 @@ import {
   BrainCircuit,
   Briefcase,
   Building2,
+  CalendarDays,
   Cpu,
   Gamepad2,
   GraduationCap,
+  MailPlus,
+  MessageCircle,
+  MessagesSquare,
   Newspaper,
   RadioTower,
   Search,
   Settings,
   Shield,
-  ShoppingBag,
   Sparkles,
   Sprout,
   Trophy,
@@ -32,10 +35,9 @@ import Footer from '@/components/layout/Footer';
 import AdminContactInbox from '@/components/admin/AdminContactInbox';
 import AdminGameLabQueue from '@/components/admin/AdminGameLabQueue';
 import AdminTeamOps from '@/components/admin/AdminTeamOps';
-import AdminWeekendLeads from '@/components/admin/AdminWeekendLeads';
 import { Badge, Button, GlassCard, Input, ProgressBar, Section } from '@/components/ui';
 import { useAuthStore } from '@/store';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
 type AdminStatsPayload = {
   stats: {
@@ -78,7 +80,7 @@ type AdminStatsPayload = {
   }>;
 };
 
-const tabs = ['Command Center', 'Governance', 'Team Ops', 'Programs', 'Commerce', 'Game Lab', 'Settings'] as const;
+const tabs = ['Command Center', 'Messages', 'Team Ops', 'Programs', 'Game Lab', 'Settings'] as const;
 
 const controlModules = [
   {
@@ -226,6 +228,12 @@ export default function AdminPage() {
     };
   }, [token]);
 
+  useEffect(() => {
+    const panel = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('panel') : null;
+    if (panel === 'messages') setActiveTab('Messages');
+    if (panel === 'team' || panel === 'invite') setActiveTab('Team Ops');
+  }, []);
+
   const statCards = useMemo(
     () => [
       {
@@ -241,10 +249,10 @@ export default function AdminPage() {
         icon: GraduationCap,
       },
       {
-        label: 'Commerce + hardware',
-        value: formatCurrency(payload.stats.marketplace.revenue),
-        detail: `${payload.stats.marketplace.orders} marketplace orders processed`,
-        icon: ShoppingBag,
+        label: 'Team coordination',
+        value: payload.stats.users.instructors.toLocaleString(),
+        detail: 'staff, instructors, and operators can be coordinated from Team Ops',
+        icon: MessagesSquare,
       },
       {
         label: 'Competition system',
@@ -255,6 +263,11 @@ export default function AdminPage() {
     ],
     [payload]
   );
+
+  const adminShortcuts = [
+    { label: 'Messages', icon: MessagesSquare, action: () => setActiveTab('Messages') },
+    { label: 'Invite team', icon: MailPlus, action: () => setActiveTab('Team Ops') },
+  ];
 
   return (
     <main className="min-h-screen bg-brand-dark text-white">
@@ -324,12 +337,41 @@ export default function AdminPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              {adminShortcuts.map((shortcut) => (
+                <button
+                  key={shortcut.label}
+                  type="button"
+                  title={shortcut.label}
+                  onClick={shortcut.action}
+                  className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:border-brand-accent/35 hover:text-white"
+                >
+                  <shortcut.icon className="h-5 w-5" />
+                </button>
+              ))}
+              <Link
+                href="/notifications"
+                title="Notifications"
+                className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:border-brand-accent/35 hover:text-white"
+              >
+                <Bell className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/team#calendar"
+                title="Team calendar"
+                className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:border-brand-accent/35 hover:text-white"
+              >
+                <CalendarDays className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/team#chat"
+                title="Chat rooms"
+                className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:border-brand-accent/35 hover:text-white"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </Link>
               <div className="w-full sm:w-64">
                 <Input placeholder="Search systems, schools, creators..." icon={<Search className="h-4 w-4" />} />
               </div>
-              <button type="button" className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
-                <Bell className="h-5 w-5" />
-              </button>
               <button type="button" className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/60 transition-colors hover:text-white">
                 <Settings className="h-5 w-5" />
               </button>
@@ -425,11 +467,11 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.28em] text-brand-accent">Recent activations</p>
-                    <h3 className="mt-2 font-heading text-2xl font-semibold">Learning, marketplace, and ecosystem activity</h3>
+                    <h3 className="mt-2 font-heading text-2xl font-semibold">Learning and ecosystem activity</h3>
                   </div>
                   <Activity className="h-6 w-6 text-brand-accent" />
                 </div>
-                <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="mt-6">
                   <div>
                     <div className="mb-4 flex items-center justify-between">
                       <h4 className="text-sm font-semibold text-white">Recent enrollments</h4>
@@ -452,39 +494,6 @@ export default function AdminPage() {
                             </div>
                           </div>
                           <div className="mt-3 text-xs text-white/35">{formatDate(item.enrolledAt)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-white">Marketplace flow</h4>
-                      <Link href="/marketplace" className="text-sm text-brand-accent hover:text-brand-accent-light">
-                        Open commerce
-                      </Link>
-                    </div>
-                    <div className="space-y-3">
-                      {payload.recentOrders.map((order) => (
-                        <div key={order.id} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="text-sm font-semibold text-white">#{order.id.slice(-6).toUpperCase()}</div>
-                              <div className="text-xs text-white/45">
-                                {[order.user?.firstName, order.user?.lastName].filter(Boolean).join(' ') || 'Robotix order'}
-                              </div>
-                            </div>
-                            <Badge variant={order.status === 'delivered' ? 'primary' : order.status === 'shipped' ? 'accent' : 'success'}>
-                              {order.status}
-                            </Badge>
-                          </div>
-                          <div className="mt-3 text-sm text-white/68">
-                            {order.items?.[0]?.product?.name || 'Marketplace bundle'}
-                          </div>
-                          <div className="mt-3 flex items-center justify-between text-xs text-white/35">
-                            <span>{formatCurrency(order.total)}</span>
-                            <span>{formatDate(order.createdAt)}</span>
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -537,7 +546,7 @@ export default function AdminPage() {
         </>
       )}
 
-      {activeTab === 'Governance' && (
+      {activeTab === 'Messages' && (
         <Section className="py-8">
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -574,7 +583,6 @@ export default function AdminPage() {
             </div>
 
             <AdminContactInbox />
-            <AdminWeekendLeads />
           </div>
         </Section>
       )}
@@ -588,7 +596,7 @@ export default function AdminPage() {
               { title: 'Game and simulation layer', metric: 'Interactive labs and challenge environments', icon: Gamepad2 },
               { title: 'AgriTech systems', metric: 'Smart farming dashboards and connected field intelligence', icon: Sprout },
               { title: 'Innovation hub', metric: 'Founder pathways, ventures, and prototype readiness', icon: Briefcase },
-              { title: 'Research and hardware', metric: `${payload.stats.marketplace.products} product and kit surfaces`, icon: Cpu },
+              { title: 'Research and robotics lab', metric: 'Teaching kits, lab materials, and project surfaces', icon: Cpu },
             ].map((item) => (
               <GlassCard key={item.title} hover className="p-6">
                 <div className="flex items-center justify-between">
@@ -608,44 +616,6 @@ export default function AdminPage() {
       {activeTab === 'Team Ops' && (
         <Section className="py-8">
           <AdminTeamOps />
-        </Section>
-      )}
-
-      {activeTab === 'Commerce' && (
-        <Section className="py-8">
-          <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="font-heading text-2xl font-semibold">Marketplace intelligence</h3>
-                <ShoppingBag className="h-6 w-6 text-brand-accent" />
-              </div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-                  <div className="text-xs uppercase tracking-[0.24em] text-white/40">Revenue</div>
-                  <div className="mt-3 text-3xl font-bold">{formatCurrency(payload.stats.marketplace.revenue)}</div>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-                  <div className="text-xs uppercase tracking-[0.24em] text-white/40">Orders</div>
-                  <div className="mt-3 text-3xl font-bold">{payload.stats.marketplace.orders}</div>
-                </div>
-              </div>
-            </GlassCard>
-
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="font-heading text-2xl font-semibold">Popular learning demand</h3>
-                <GraduationCap className="h-6 w-6 text-brand-accent" />
-              </div>
-              <div className="mt-6 space-y-3">
-                {payload.popularCourses.map((course) => (
-                  <div key={course.slug} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                    <div className="text-sm font-semibold text-white">{course.title}</div>
-                    <div className="mt-2 text-sm text-white/55">{course.enrollmentCount} enrollments</div>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
-          </div>
         </Section>
       )}
 

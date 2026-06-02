@@ -94,7 +94,7 @@ export function middleware(req: NextRequest) {
     return applySecurityHeaders(NextResponse.redirect(url));
   }
 
-  if (isStaffOnly && user.role !== 'ADMIN' && user.role !== 'INSTRUCTOR') {
+  if (isStaffOnly && user.role !== 'ADMIN' && user.role !== 'INSTRUCTOR' && user.role !== 'ACCOUNTANT') {
     const url = req.nextUrl.clone();
     url.pathname = '/';
     return applySecurityHeaders(NextResponse.redirect(url));

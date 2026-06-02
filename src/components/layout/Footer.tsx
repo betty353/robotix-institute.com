@@ -22,6 +22,7 @@ const footerSections = [
       { label: 'About', href: '/about' },
       { label: 'Partners', href: '/partners' },
       { label: 'Contact', href: '/contact' },
+      { label: 'Careers', href: '/careers' },
       { label: 'Blog', href: '/blog' },
       { label: 'Community', href: '/community' },
     ],

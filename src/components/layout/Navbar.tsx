@@ -9,7 +9,7 @@ import {
   Menu, X, ChevronDown,
   GraduationCap, Code, Cpu, Gamepad2, Trophy,
   Users, Bot, Wifi, BookOpen, Bell, Search,
-  Map, BarChart3, Building2, Radio, Shield, Zap, CalendarDays, ReceiptText
+  Map, BarChart3, Building2, Radio, Shield, Zap, CalendarDays, ReceiptText, Briefcase, MailPlus, MessageCircle, MessagesSquare
 } from 'lucide-react';
 
 const navItems = [
@@ -43,6 +43,7 @@ const navItems = [
       { label: 'Analytics', href: '/analytics', icon: BarChart3 },
       { label: 'Team Workspace', href: '/team', icon: CalendarDays },
       { label: 'Events', href: '/events', icon: Building2 },
+      { label: 'Careers', href: '/careers', icon: Briefcase },
     ],
   },
   {
@@ -214,6 +215,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
+          {user?.role !== 'ADMIN' && (
           <div className="hidden lg:flex items-center gap-1">
             {navItems.map((item) =>
               item.children ? (
@@ -261,6 +263,7 @@ export default function Navbar() {
               )
             )}
           </div>
+          )}
 
           {/* Right Section */}
           <div className="flex items-center gap-2">
@@ -400,40 +403,61 @@ export default function Navbar() {
             {/* Auth Buttons */}
             {isAuthenticated ? (
               <div className="hidden lg:flex items-center gap-2">
-                {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
-                  <Link
-                    href="/team"
-                    className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                    title="Team Workspace"
-                  >
-                    <CalendarDays className="w-5 h-5" />
-                  </Link>
+                {user?.role === 'ADMIN' ? (
+                  <>
+                    <Link href="/admin?panel=invite" className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors" title="Invite team">
+                      <MailPlus className="w-5 h-5" />
+                    </Link>
+                    <Link href="/admin?panel=messages" className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors" title="Messages">
+                      <MessagesSquare className="w-5 h-5" />
+                    </Link>
+                    <Link href="/team#calendar" className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors" title="Calendar">
+                      <CalendarDays className="w-5 h-5" />
+                    </Link>
+                    <Link href="/team#chat" className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors" title="Chat rooms">
+                      <MessageCircle className="w-5 h-5" />
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    {(user?.role === 'INSTRUCTOR' || user?.role === 'ACCOUNTANT') && (
+                      <>
+                        <Link
+                          href="/team#calendar"
+                          className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                          title="Calendar"
+                        >
+                          <CalendarDays className="w-5 h-5" />
+                        </Link>
+                        <Link
+                          href="/team#chat"
+                          className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                          title="Chat rooms"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                        </Link>
+                      </>
+                    )}
+                    {(user?.role === 'ACCOUNTANT') && (
+                      <Link
+                        href="/accounts"
+                        className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                        title="Accounts Panel"
+                      >
+                        <ReceiptText className="w-5 h-5" />
+                      </Link>
+                    )}
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold">
+                        {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                      </div>
+                      <span>{user?.firstName}</span>
+                    </Link>
+                  </>
                 )}
-                {(user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                  <Link
-                    href="/accounts"
-                    className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                    title="Accounts Panel"
-                  >
-                    <ReceiptText className="w-5 h-5" />
-                  </Link>
-                )}
-                <Link
-                  href="/analytics"
-                  className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                  title="My Analytics"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-xs font-bold">
-                    {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                  </div>
-                  <span>{user?.firstName}</span>
-                </Link>
               </div>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
@@ -467,7 +491,27 @@ export default function Navbar() {
             className="lg:hidden border-t border-white/10 bg-brand-dark/95 backdrop-blur-xl"
           >
             <div className="px-4 py-4 space-y-1">
-              {navItems.map((item) =>
+              {user?.role === 'ADMIN' ? (
+                <div className="grid grid-cols-4 gap-2 border-b border-white/10 pb-4">
+                  {[
+                    { label: 'Invite', href: '/admin?panel=invite', icon: MailPlus },
+                    { label: 'Messages', href: '/admin?panel=messages', icon: MessagesSquare },
+                    { label: 'Calendar', href: '/team#calendar', icon: CalendarDays },
+                    { label: 'Chat', href: '/team#chat', icon: MessageCircle },
+                  ].map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-xs text-white/70"
+                    >
+                      <item.icon className="h-5 w-5 text-brand-accent" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+              navItems.map((item) =>
                 item.children ? (
                   <div key={item.label} className="space-y-1">
                     <p className="px-3 py-2 text-xs font-semibold text-white/40 uppercase tracking-wider">
@@ -495,6 +539,7 @@ export default function Navbar() {
                     {item.label}
                   </Link>
                 )
+              )
               )}
               {!isAuthenticated && (
                 <div className="pt-4 border-t border-white/10 space-y-2">

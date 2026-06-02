@@ -50,7 +50,7 @@ const timetableSelect = {
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);
-    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    const denied = await requireRole(user, ['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR']);
     if (denied) return denied;
 
     const entries = await prisma.teamCalendarEvent.findMany({

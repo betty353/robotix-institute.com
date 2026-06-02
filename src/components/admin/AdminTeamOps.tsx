@@ -36,7 +36,6 @@ type TimetableEntry = {
 const roleOptions = [
   { value: 'INSTRUCTOR', label: 'Instructor' },
   { value: 'ACCOUNTANT', label: 'Accounts personnel' },
-  { value: 'ADMIN', label: 'Admin' },
 ];
 
 const emptyInvite = {

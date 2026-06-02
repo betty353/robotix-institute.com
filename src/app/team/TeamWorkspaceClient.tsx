@@ -2,9 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Badge, Button, GlassCard, Input, Textarea } from '@/components/ui';
+import { Badge, Button, GlassCard, Input, Select, Textarea } from '@/components/ui';
 import { useAuthStore } from '@/store';
-import { CalendarDays, Clock, LockKeyhole, MailCheck, MessageCircle, RefreshCw, Send, UsersRound } from 'lucide-react';
+import { CalendarDays, ClipboardList, Clock, LockKeyhole, MailCheck, MessageCircle, RefreshCw, Send, UsersRound } from 'lucide-react';
 
 type TeamUser = {
   id: string;
@@ -31,6 +31,17 @@ type TeamEvent = {
   createdBy: TeamUser;
 };
 
+type TeamRequest = {
+  id: string;
+  title: string;
+  details: string;
+  priority: 'LOW' | 'NORMAL' | 'URGENT';
+  status: 'OPEN' | 'REVIEWING' | 'APPROVED' | 'DONE' | 'REJECTED';
+  response?: string | null;
+  createdAt: string;
+  user: TeamUser & { email: string };
+};
+
 const emptyEventForm = {
   title: '',
   description: '',
@@ -38,6 +49,26 @@ const emptyEventForm = {
   startsAt: '',
   endsAt: '',
 };
+
+const emptyRequestForm = {
+  title: '',
+  details: '',
+  priority: 'NORMAL',
+};
+
+const priorityOptions = [
+  { value: 'LOW', label: 'Low' },
+  { value: 'NORMAL', label: 'Normal' },
+  { value: 'URGENT', label: 'Urgent' },
+];
+
+const requestStatusOptions = [
+  { value: 'OPEN', label: 'Open' },
+  { value: 'REVIEWING', label: 'Reviewing' },
+  { value: 'APPROVED', label: 'Approved' },
+  { value: 'DONE', label: 'Done' },
+  { value: 'REJECTED', label: 'Rejected' },
+];
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -62,14 +93,18 @@ export default function TeamWorkspaceClient() {
   const { isAuthenticated, token, user } = useAuthStore();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
   const [events, setEvents] = useState<TeamEvent[]>([]);
+  const [requests, setRequests] = useState<TeamRequest[]>([]);
   const [messageBody, setMessageBody] = useState('');
   const [eventForm, setEventForm] = useState(emptyEventForm);
+  const [requestForm, setRequestForm] = useState(emptyRequestForm);
   const [loading, setLoading] = useState(true);
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingEvent, setSavingEvent] = useState(false);
+  const [savingRequest, setSavingRequest] = useState(false);
+  const [savingRequestId, setSavingRequestId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isTeamMember = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR';
+  const isTeamMember = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT' || user?.role === 'INSTRUCTOR';
 
   const upcomingToday = useMemo(
     () =>
@@ -94,25 +129,31 @@ export default function TeamWorkspaceClient() {
     setLoading(true);
     setError(null);
     try {
-      const [messageResponse, eventResponse] = await Promise.all([
+      const [messageResponse, eventResponse, requestResponse] = await Promise.all([
         fetch('/api/team/messages?limit=40', {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch('/api/team/events', {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch('/api/team/requests', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
-      const [messageJson, eventJson] = await Promise.all([
+      const [messageJson, eventJson, requestJson] = await Promise.all([
         messageResponse.json(),
         eventResponse.json(),
+        requestResponse.json(),
       ]);
 
       if (!messageResponse.ok) throw new Error(messageJson?.message || 'Team chat could not be loaded.');
       if (!eventResponse.ok) throw new Error(eventJson?.message || 'Team calendar could not be loaded.');
+      if (!requestResponse.ok) throw new Error(requestJson?.message || 'Team requests could not be loaded.');
 
       setMessages(Array.isArray(messageJson?.data) ? messageJson.data : []);
       setEvents(Array.isArray(eventJson?.data) ? eventJson.data : []);
+      setRequests(Array.isArray(requestJson?.data) ? requestJson.data : []);
     } catch (workspaceError) {
       setError(workspaceError instanceof Error ? workspaceError.message : 'Team workspace could not be loaded.');
     } finally {
@@ -181,6 +222,56 @@ export default function TeamWorkspaceClient() {
     }
   };
 
+  const createRequest = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token) return;
+
+    setSavingRequest(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/team/requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestForm),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.message || 'Request could not be sent.');
+      setRequests((current) => [json.data, ...current]);
+      setRequestForm(emptyRequestForm);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Request could not be sent.');
+    } finally {
+      setSavingRequest(false);
+    }
+  };
+
+  const updateRequestStatus = async (requestId: string, status: string, responseText = '') => {
+    if (!token || user?.role !== 'ADMIN') return;
+
+    setSavingRequestId(requestId);
+    setError(null);
+    try {
+      const response = await fetch('/api/team/requests', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ requestId, status, response: responseText }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.message || 'Request could not be updated.');
+      setRequests((current) => current.map((request) => (request.id === requestId ? json.data : request)));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Request could not be updated.');
+    } finally {
+      setSavingRequestId(null);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <GlassCard className="p-8 text-center">
@@ -202,7 +293,7 @@ export default function TeamWorkspaceClient() {
         <LockKeyhole className="mx-auto h-10 w-10 text-brand-secondary" />
         <h1 className="mt-5 font-heading text-3xl font-bold text-white">Staff access only</h1>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/62">
-          This workspace is for Robotix administrators and instructors. Student accounts stay focused on learning tools.
+          This workspace is for Robotix administrators, instructors, and accounts staff. Student accounts stay focused on learning tools.
         </p>
       </GlassCard>
     );
@@ -214,7 +305,7 @@ export default function TeamWorkspaceClient() {
         {[
           { label: 'Team messages', value: messages.length.toString(), icon: MessageCircle },
           { label: 'Calendar events', value: events.length.toString(), icon: CalendarDays },
-          { label: 'Events today', value: upcomingToday.toString(), icon: Clock },
+          { label: 'Team requests', value: requests.length.toString(), icon: ClipboardList },
         ].map((item) => (
           <GlassCard key={item.label} className="p-5">
             <div className="flex items-start justify-between gap-3">
@@ -256,7 +347,7 @@ export default function TeamWorkspaceClient() {
         </div>
 
         <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="border-white/10 p-6 lg:border-r">
+          <div id="chat" className="scroll-mt-24 border-white/10 p-6 lg:border-r">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-heading text-2xl font-semibold text-white">Team chat</h2>
@@ -304,7 +395,7 @@ export default function TeamWorkspaceClient() {
             </form>
           </div>
 
-          <div className="p-6">
+          <div id="calendar" className="scroll-mt-24 p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-heading text-2xl font-semibold text-white">Team calendar</h2>
@@ -355,6 +446,12 @@ export default function TeamWorkspaceClient() {
             </form>
 
             <div className="mt-5 space-y-3">
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                <div className="flex items-center justify-between text-sm text-white/65">
+                  <span>Events today</span>
+                  <span className="font-semibold text-white">{upcomingToday}</span>
+                </div>
+              </div>
               {loading ? <div className="text-sm text-white/50">Loading calendar...</div> : null}
               {!loading && events.length === 0 ? (
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-white/50">
@@ -383,6 +480,103 @@ export default function TeamWorkspaceClient() {
           </div>
         </div>
       </GlassCard>
+
+      <div id="requests" className="scroll-mt-24">
+      <GlassCard className="overflow-hidden p-0">
+        <div className="border-b border-white/10 bg-white/[0.04] p-6">
+          <Badge variant="accent" className="mb-3">
+            <ClipboardList className="mr-1 h-3 w-3" />
+            Company Requests
+          </Badge>
+          <h2 className="font-heading text-3xl font-bold text-white">Ask admin for what the team needs.</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/62">
+            Staff can request teaching materials, kits, maintenance, transport, class support, or anything needed for Robotix operations.
+          </p>
+        </div>
+
+        <div className="grid gap-0 lg:grid-cols-[0.85fr_1.15fr]">
+          <form onSubmit={createRequest} className="border-white/10 p-6 lg:border-r">
+            <Input
+              label="Request title"
+              value={requestForm.title}
+              onChange={(event) => setRequestForm((current) => ({ ...current, title: event.target.value }))}
+              placeholder="Arduino batteries, transport, lab repair..."
+              required
+            />
+            <Select
+              label="Priority"
+              value={requestForm.priority}
+              onChange={(event) => setRequestForm((current) => ({ ...current, priority: event.target.value }))}
+              options={priorityOptions}
+              className="mt-4"
+            />
+            <Textarea
+              label="Details"
+              value={requestForm.details}
+              onChange={(event) => setRequestForm((current) => ({ ...current, details: event.target.value }))}
+              placeholder="Explain what is needed, why it is needed, and when it is needed..."
+              required
+              className="mt-4"
+            />
+            <Button type="submit" className="mt-4" icon={<Send className="h-4 w-4" />} loading={savingRequest}>
+              Send request
+            </Button>
+          </form>
+
+          <div className="p-6">
+            <h3 className="font-heading text-2xl font-semibold text-white">
+              {user?.role === 'ADMIN' ? 'All team requests' : 'My requests'}
+            </h3>
+            <div className="mt-5 space-y-3">
+              {loading ? <div className="text-sm text-white/50">Loading requests...</div> : null}
+              {!loading && requests.length === 0 ? (
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-white/50">
+                  No team requests yet.
+                </div>
+              ) : null}
+              {requests.map((request) => (
+                <div key={request.id} className="rounded-2xl border border-white/8 bg-white/[0.04] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.22em] text-brand-secondary">{request.priority}</div>
+                      <h4 className="mt-2 font-heading text-xl font-semibold text-white">{request.title}</h4>
+                      <p className="mt-1 text-xs text-white/45">
+                        {request.user.firstName} {request.user.lastName} | {formatDateTime(request.createdAt)}
+                      </p>
+                    </div>
+                    <Badge variant={request.status === 'REJECTED' ? 'danger' : request.status === 'DONE' ? 'success' : 'primary'}>
+                      {request.status}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/65">{request.details}</p>
+                  {request.response ? (
+                    <div className="mt-3 rounded-2xl border border-brand-secondary/15 bg-brand-secondary/8 p-3 text-sm leading-6 text-white/65">
+                      Admin response: {request.response}
+                    </div>
+                  ) : null}
+                  {user?.role === 'ADMIN' ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {requestStatusOptions.map((option) => (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          size="sm"
+                          variant={request.status === option.value ? 'primary' : 'secondary'}
+                          loading={savingRequestId === request.id}
+                          onClick={() => updateRequestStatus(request.id, option.value, request.response || '')}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </GlassCard>
+      </div>
     </div>
   );
 }

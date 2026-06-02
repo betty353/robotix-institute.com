@@ -13,7 +13,7 @@ const inviteSchema = z.object({
   email: z.string().email('A valid email address is required'),
   firstName: z.string().min(2, 'First name is required').max(80),
   lastName: z.string().min(2, 'Last name is required').max(80),
-  role: z.enum(['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR']),
+  role: z.enum(['ACCOUNTANT', 'INSTRUCTOR']),
 });
 
 function hashToken(token: string) {

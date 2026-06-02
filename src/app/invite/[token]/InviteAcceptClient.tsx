@@ -34,7 +34,7 @@ export default function InviteAcceptClient({ token }: { token: string }) {
       const json = await response.json();
       if (!response.ok) throw new Error(json?.message || 'Invite could not be accepted.');
       login(json.data.user, json.data.token);
-      router.push(json.data.user.role === 'ACCOUNTANT' ? '/accounts' : '/team');
+      router.push('/team');
     } catch (acceptError) {
       setError(acceptError instanceof Error ? acceptError.message : 'Invite could not be accepted.');
     } finally {

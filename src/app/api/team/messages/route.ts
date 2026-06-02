@@ -30,7 +30,7 @@ function selectMessage() {
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);
-    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    const denied = await requireRole(user, ['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR']);
     if (denied) return denied;
 
     const { searchParams } = new URL(request.url);
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const authUser = getUserFromRequest(request);
-  const denied = await requireRole(authUser, ['ADMIN', 'INSTRUCTOR']);
+  const denied = await requireRole(authUser, ['ADMIN', 'ACCOUNTANT', 'INSTRUCTOR']);
   if (denied) return denied;
 
   const ip = request.headers.get('x-forwarded-for') || authUser?.userId || 'unknown';

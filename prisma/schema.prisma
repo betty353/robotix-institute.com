@@ -60,6 +60,7 @@ model User {
   teamChatMessages     TeamChatMessage[]
   teamCalendarEvents   TeamCalendarEvent[]
   assignedTeamCalendarEvents TeamCalendarEvent[] @relation("TeamCalendarAssignee")
+  teamRequests         TeamRequest[]
   sentTeamInvites      TeamInvite[] @relation("TeamInviteInviter")
   gamificationLogs     GamificationLog[]
   passwordResetTokens  PasswordResetToken[]
@@ -903,4 +904,23 @@ model TeamInvite {
   @@index([email])
   @@index([role])
   @@index([expiresAt])
+}
+
+model TeamRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  details   String
+  priority  String   @default("NORMAL") // LOW, NORMAL, URGENT
+  status    String   @default("OPEN") // OPEN, REVIEWING, APPROVED, DONE, REJECTED
+  response  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
 }

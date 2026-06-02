@@ -48,10 +48,11 @@ export default function TermsPage() {
             platform and showcase it for educational purposes.
           </p>
 
-          <h2>5. Marketplace</h2>
+          <h2>5. Payments and programs</h2>
           <p>
-            Hardware orders are subject to availability. Returns accepted within
-            14 days for unopened, undamaged items. Faulty items will be replaced.
+            Program payments, deposits, and learning arrangements are confirmed
+            through Robotix staff. Offline payment proof may be reviewed by the
+            accounts team before a record is marked as paid.
           </p>
 
           <h2>6. Termination</h2>
