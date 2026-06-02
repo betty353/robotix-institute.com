@@ -20,6 +20,36 @@ const contactSchema = z.object({
   message: z.string().min(10, 'Message is too short').max(4000, 'Message is too long'),
 });
 
+const followUpSchema = z.object({
+  id: z.string().min(1, 'Message ID is required'),
+  status: z.enum(['NEW', 'CONTACTED', 'BOOKED', 'CLOSED']).optional(),
+  adminNotes: z.string().max(1500, 'Admin notes are too long').optional(),
+  assignedToId: z.string().optional().nullable(),
+});
+
+const contactSelect = {
+  id: true,
+  name: true,
+  email: true,
+  subject: true,
+  message: true,
+  status: true,
+  adminNotes: true,
+  assignedToId: true,
+  source: true,
+  createdAt: true,
+  updatedAt: true,
+  assignedTo: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+    },
+  },
+} as const;
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);
@@ -42,6 +72,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         skip: pagination.skip,
         take: pagination.limit,
+        select: contactSelect,
       }),
       prisma.contactMessage.count({ where }),
     ]);
@@ -49,6 +80,63 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(createPaginatedResponse(messages, total, pagination));
   } catch (error) {
     console.error('contact GET error:', error);
+    return NextResponse.json(createErrorResponse('Internal server error'), { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(createErrorResponse('Unauthorized'), { status: 401 });
+    }
+
+    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    if (denied) return denied;
+
+    const body = await request.json();
+    const validation = validateInput(followUpSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(createErrorResponse('Validation failed', validation.errors), { status: 400 });
+    }
+
+    const payload = validation.data!;
+    const updateData: {
+      status?: 'NEW' | 'CONTACTED' | 'BOOKED' | 'CLOSED';
+      adminNotes?: string;
+      assignedToId?: string | null;
+    } = {};
+
+    if (payload.status) updateData.status = payload.status;
+    if (typeof payload.adminNotes === 'string') updateData.adminNotes = sanitizeInput(payload.adminNotes);
+    if (payload.assignedToId !== undefined) {
+      if (payload.assignedToId) {
+        const staff = await prisma.user.findFirst({
+          where: {
+            id: payload.assignedToId,
+            isActive: true,
+            role: { in: ['ADMIN', 'INSTRUCTOR'] },
+          },
+          select: { id: true },
+        });
+        if (!staff) {
+          return NextResponse.json(createErrorResponse('Assigned staff member was not found'), { status: 400 });
+        }
+        updateData.assignedToId = payload.assignedToId;
+      } else {
+        updateData.assignedToId = null;
+      }
+    }
+
+    const message = await prisma.contactMessage.update({
+      where: { id: payload.id },
+      data: updateData,
+      select: contactSelect,
+    });
+
+    return NextResponse.json(createApiResponse(message, 'Contact follow-up updated'));
+  } catch (error) {
+    console.error('contact PATCH error:', error);
     return NextResponse.json(createErrorResponse('Internal server error'), { status: 500 });
   }
 }

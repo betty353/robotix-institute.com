@@ -60,6 +60,8 @@ model User {
   teamCalendarEvents   TeamCalendarEvent[]
   gamificationLogs     GamificationLog[]
   passwordResetTokens  PasswordResetToken[]
+  assignedContactMessages ContactMessage[] @relation("ContactMessageAssignee")
+  assignedWeekendClassLeads WeekendClassLead[] @relation("WeekendClassLeadAssignee")
 
   /// Total lifetime points — used for all-time leaderboard and badges.
   points Int @default(0)
@@ -90,13 +92,18 @@ model ContactMessage {
   subject   String?
   message   String
   status    String   @default("NEW")
+  adminNotes String?
+  assignedToId String?
   source    String   @default("website-contact-form")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  assignedTo User? @relation("ContactMessageAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
   @@index([createdAt])
   @@index([status])
   @@index([email])
+  @@index([assignedToId])
 }
 
 model WeekendClassLead {
@@ -111,13 +118,18 @@ model WeekendClassLead {
   preferredSchedule String
   notes             String?
   status            String   @default("NEW")
+  adminNotes        String?
+  assignedToId      String?
   source            String   @default("weekend-classes-page")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  assignedTo User? @relation("WeekendClassLeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
   @@index([createdAt])
   @@index([status])
   @@index([parentEmail])
+  @@index([assignedToId])
 }
 
 // ─── Course & LMS ───────────────────────────────────────────

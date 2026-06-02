@@ -1,11 +1,26 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, Button, GlassCard } from '@/components/ui';
+import { Badge, Button, GlassCard, Select, Textarea } from '@/components/ui';
 import type { ContactMessage } from '@/lib/firebase';
 import { useAuthStore } from '@/store';
 import { formatDate } from '@/lib/utils';
 import { Inbox, Mail, MessageSquare, Server, UserRound } from 'lucide-react';
+
+type StaffMember = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+};
+
+const followUpStatuses = [
+  { value: 'NEW', label: 'New' },
+  { value: 'CONTACTED', label: 'Contacted' },
+  { value: 'BOOKED', label: 'Booked' },
+  { value: 'CLOSED', label: 'Closed' },
+];
 
 function getMessageDateValue(value: ContactMessage['createdAt']) {
   if (!value) return null;
@@ -24,8 +39,10 @@ function getMessageDateLabel(value: ContactMessage['createdAt']) {
 export default function AdminContactInbox() {
   const token = useAuthStore((state) => state.token);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -40,15 +57,24 @@ export default function AdminContactInbox() {
       setLoading(true);
       setLoadError(null);
       try {
-        const response = await fetch('/api/contact?limit=20', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const json = await response.json();
-        if (!response.ok) {
-          throw new Error(json?.message || 'Contact inbox could not be loaded.');
+        const [messageResponse, staffResponse] = await Promise.all([
+          fetch('/api/contact?limit=20', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('/api/team/staff', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        const [messageJson, staffJson] = await Promise.all([
+          messageResponse.json(),
+          staffResponse.json(),
+        ]);
+        if (!messageResponse.ok) {
+          throw new Error(messageJson?.message || 'Contact inbox could not be loaded.');
         }
         if (!cancelled) {
-          setMessages(Array.isArray(json?.data) ? json.data : []);
+          setMessages(Array.isArray(messageJson?.data) ? messageJson.data : []);
+          setStaff(staffResponse.ok && Array.isArray(staffJson?.data) ? staffJson.data : []);
         }
       } catch (error) {
         if (!cancelled) {
@@ -84,6 +110,42 @@ export default function AdminContactInbox() {
     }),
     [messages]
   );
+
+  const updateMessageField = (id: string, updates: Partial<ContactMessage>) => {
+    setMessages((current) =>
+      current.map((message) => (message.id === id ? { ...message, ...updates } : message))
+    );
+  };
+
+  const saveFollowUp = async (message: ContactMessage) => {
+    if (!token) return;
+    setSavingId(message.id);
+    setLoadError(null);
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: message.id,
+          status: message.status || 'NEW',
+          assignedToId: message.assignedToId || null,
+          adminNotes: message.adminNotes || '',
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.message || 'Could not save follow-up details.');
+      }
+      updateMessageField(message.id, json.data);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not save follow-up details.');
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -167,6 +229,50 @@ export default function AdminContactInbox() {
                     <span className="font-semibold">Subject:</span> {message.subject || 'General enquiry'}
                   </div>
                   <p>{message.message}</p>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-brand-secondary/15 bg-brand-secondary/8 p-4">
+                  <div className="mb-3 text-sm font-semibold text-white">Follow-up workflow</div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Select
+                      label="Status"
+                      value={message.status || 'NEW'}
+                      onChange={(event) => updateMessageField(message.id, { status: event.target.value })}
+                      options={followUpStatuses}
+                    />
+                    <Select
+                      label="Assigned staff"
+                      value={message.assignedToId || ''}
+                      onChange={(event) => updateMessageField(message.id, { assignedToId: event.target.value || null })}
+                      options={[
+                        { value: '', label: 'Unassigned' },
+                        ...staff.map((member) => ({
+                          value: member.id,
+                          label: `${member.firstName} ${member.lastName} (${member.role})`,
+                        })),
+                      ]}
+                    />
+                  </div>
+                  <Textarea
+                    label="Private admin notes"
+                    value={message.adminNotes || ''}
+                    onChange={(event) => updateMessageField(message.id, { adminNotes: event.target.value })}
+                    placeholder="Add call notes, next steps, pricing discussed, or follow-up reminders..."
+                    className="mt-3"
+                  />
+                  {message.assignedTo ? (
+                    <div className="mt-3 text-xs text-white/48">
+                      Assigned to {message.assignedTo.firstName} {message.assignedTo.lastName}
+                    </div>
+                  ) : null}
+                  <Button
+                    size="sm"
+                    className="mt-3"
+                    loading={savingId === message.id}
+                    onClick={() => saveFollowUp(message)}
+                  >
+                    Save follow-up
+                  </Button>
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-white/45">

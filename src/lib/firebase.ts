@@ -155,6 +155,16 @@ export interface WeekendClassLeadInput {
 
 export interface WeekendClassLead extends WeekendClassLeadInput {
   id: string;
+  status?: string;
+  adminNotes?: string | null;
+  assignedToId?: string | null;
+  assignedTo?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+  } | null;
   source?: string;
   createdAt?: Timestamp | string;
   updatedAt?: Timestamp | string;
@@ -170,6 +180,15 @@ export interface ContactMessageInput {
 export interface ContactMessage extends ContactMessageInput {
   id: string;
   status?: string;
+  adminNotes?: string | null;
+  assignedToId?: string | null;
+  assignedTo?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+  } | null;
   source?: string;
   createdAt?: Timestamp | string;
   updatedAt?: Timestamp | string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, GlassCard } from '@/components/ui';
+import { Badge, Button, GlassCard, Select, Textarea } from '@/components/ui';
 import type { WeekendClassLead } from '@/lib/firebase';
 import { useAuthStore } from '@/store';
 import { formatDate } from '@/lib/utils';
@@ -15,6 +15,21 @@ import {
   Users,
 } from 'lucide-react';
 
+type StaffMember = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+};
+
+const followUpStatuses = [
+  { value: 'NEW', label: 'New' },
+  { value: 'CONTACTED', label: 'Contacted' },
+  { value: 'BOOKED', label: 'Booked' },
+  { value: 'CLOSED', label: 'Closed' },
+];
+
 function getLeadDate(value: WeekendClassLead['createdAt']) {
   if (!value) return 'Unscheduled';
   if (typeof value === 'string') return formatDate(value);
@@ -27,8 +42,10 @@ function getLeadDate(value: WeekendClassLead['createdAt']) {
 export default function AdminWeekendLeads() {
   const token = useAuthStore((state) => state.token);
   const [leads, setLeads] = useState<WeekendClassLead[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -43,15 +60,24 @@ export default function AdminWeekendLeads() {
       setLoading(true);
       setLoadError(null);
       try {
-        const response = await fetch('/api/weekend-class-leads?limit=50', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const json = await response.json();
-        if (!response.ok) {
-          throw new Error(json?.message || 'Weekend sign-ups could not be loaded.');
+        const [leadResponse, staffResponse] = await Promise.all([
+          fetch('/api/weekend-class-leads?limit=50', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('/api/team/staff', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        const [leadJson, staffJson] = await Promise.all([
+          leadResponse.json(),
+          staffResponse.json(),
+        ]);
+        if (!leadResponse.ok) {
+          throw new Error(leadJson?.message || 'Weekend sign-ups could not be loaded.');
         }
         if (!cancelled) {
-          setLeads(Array.isArray(json?.data) ? json.data : []);
+          setLeads(Array.isArray(leadJson?.data) ? leadJson.data : []);
+          setStaff(staffResponse.ok && Array.isArray(staffJson?.data) ? staffJson.data : []);
         }
       } catch (error) {
         if (!cancelled) {
@@ -79,6 +105,42 @@ export default function AdminWeekendLeads() {
     }),
     [leads]
   );
+
+  const updateLeadField = (id: string, updates: Partial<WeekendClassLead>) => {
+    setLeads((current) =>
+      current.map((lead) => (lead.id === id ? { ...lead, ...updates } : lead))
+    );
+  };
+
+  const saveFollowUp = async (lead: WeekendClassLead) => {
+    if (!token) return;
+    setSavingId(lead.id);
+    setLoadError(null);
+    try {
+      const response = await fetch('/api/weekend-class-leads', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: lead.id,
+          status: lead.status || 'NEW',
+          assignedToId: lead.assignedToId || null,
+          adminNotes: lead.adminNotes || '',
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.message || 'Could not save lead follow-up details.');
+      }
+      updateLeadField(lead.id, json.data);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not save lead follow-up details.');
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -156,7 +218,7 @@ export default function AdminWeekendLeads() {
                     </p>
                   </div>
                   <Badge variant="primary" className="text-[10px] uppercase tracking-[0.2em]">
-                    {lead.preferredTrack || 'Track pending'}
+                    {lead.status || 'NEW'}
                   </Badge>
                 </div>
 
@@ -191,6 +253,50 @@ export default function AdminWeekendLeads() {
                   </div>
                   <p>School: {lead.childSchool || 'Not shared'}</p>
                   <p className="mt-2">Notes: {lead.notes || 'No extra notes shared.'}</p>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-brand-secondary/15 bg-brand-secondary/8 p-4">
+                  <div className="mb-3 text-sm font-semibold text-white">Follow-up workflow</div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Select
+                      label="Status"
+                      value={lead.status || 'NEW'}
+                      onChange={(event) => updateLeadField(lead.id, { status: event.target.value })}
+                      options={followUpStatuses}
+                    />
+                    <Select
+                      label="Assigned staff"
+                      value={lead.assignedToId || ''}
+                      onChange={(event) => updateLeadField(lead.id, { assignedToId: event.target.value || null })}
+                      options={[
+                        { value: '', label: 'Unassigned' },
+                        ...staff.map((member) => ({
+                          value: member.id,
+                          label: `${member.firstName} ${member.lastName} (${member.role})`,
+                        })),
+                      ]}
+                    />
+                  </div>
+                  <Textarea
+                    label="Private admin notes"
+                    value={lead.adminNotes || ''}
+                    onChange={(event) => updateLeadField(lead.id, { adminNotes: event.target.value })}
+                    placeholder="Add parent call notes, class fit, payment plan, or next follow-up step..."
+                    className="mt-3"
+                  />
+                  {lead.assignedTo ? (
+                    <div className="mt-3 text-xs text-white/48">
+                      Assigned to {lead.assignedTo.firstName} {lead.assignedTo.lastName}
+                    </div>
+                  ) : null}
+                  <Button
+                    size="sm"
+                    className="mt-3"
+                    loading={savingId === lead.id}
+                    onClick={() => saveFollowUp(lead)}
+                  >
+                    Save follow-up
+                  </Button>
                 </div>
               </GlassCard>
             ))}

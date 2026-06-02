@@ -25,6 +25,41 @@ const leadSchema = z.object({
   notes: z.string().max(800).optional().default(''),
 });
 
+const followUpSchema = z.object({
+  id: z.string().min(1, 'Lead ID is required'),
+  status: z.enum(['NEW', 'CONTACTED', 'BOOKED', 'CLOSED']).optional(),
+  adminNotes: z.string().max(1500, 'Admin notes are too long').optional(),
+  assignedToId: z.string().optional().nullable(),
+});
+
+const leadSelect = {
+  id: true,
+  parentName: true,
+  parentEmail: true,
+  parentPhone: true,
+  childName: true,
+  childAge: true,
+  childSchool: true,
+  preferredTrack: true,
+  preferredSchedule: true,
+  notes: true,
+  status: true,
+  adminNotes: true,
+  assignedToId: true,
+  source: true,
+  createdAt: true,
+  updatedAt: true,
+  assignedTo: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+    },
+  },
+} as const;
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);
@@ -47,6 +82,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         skip: pagination.skip,
         take: pagination.limit,
+        select: leadSelect,
       }),
       prisma.weekendClassLead.count({ where }),
     ]);
@@ -54,6 +90,63 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(createPaginatedResponse(leads, total, pagination));
   } catch (error) {
     console.error('weekend leads GET error:', error);
+    return NextResponse.json(createErrorResponse('Internal server error'), { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(createErrorResponse('Unauthorized'), { status: 401 });
+    }
+
+    const denied = await requireRole(user, ['ADMIN', 'INSTRUCTOR']);
+    if (denied) return denied;
+
+    const body = await request.json();
+    const validation = validateInput(followUpSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(createErrorResponse('Validation failed', validation.errors), { status: 400 });
+    }
+
+    const payload = validation.data!;
+    const updateData: {
+      status?: 'NEW' | 'CONTACTED' | 'BOOKED' | 'CLOSED';
+      adminNotes?: string;
+      assignedToId?: string | null;
+    } = {};
+
+    if (payload.status) updateData.status = payload.status;
+    if (typeof payload.adminNotes === 'string') updateData.adminNotes = sanitizeInput(payload.adminNotes);
+    if (payload.assignedToId !== undefined) {
+      if (payload.assignedToId) {
+        const staff = await prisma.user.findFirst({
+          where: {
+            id: payload.assignedToId,
+            isActive: true,
+            role: { in: ['ADMIN', 'INSTRUCTOR'] },
+          },
+          select: { id: true },
+        });
+        if (!staff) {
+          return NextResponse.json(createErrorResponse('Assigned staff member was not found'), { status: 400 });
+        }
+        updateData.assignedToId = payload.assignedToId;
+      } else {
+        updateData.assignedToId = null;
+      }
+    }
+
+    const lead = await prisma.weekendClassLead.update({
+      where: { id: payload.id },
+      data: updateData,
+      select: leadSelect,
+    });
+
+    return NextResponse.json(createApiResponse(lead, 'Weekend lead follow-up updated'));
+  } catch (error) {
+    console.error('weekend leads PATCH error:', error);
     return NextResponse.json(createErrorResponse('Internal server error'), { status: 500 });
   }
 }
