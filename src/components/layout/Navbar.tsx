@@ -9,7 +9,7 @@ import {
   Menu, X, ChevronDown,
   GraduationCap, Code, Cpu, Gamepad2, Trophy,
   Users, Bot, Wifi, BookOpen, Bell, Search,
-  Map, BarChart3, Building2, Radio, Shield, Zap
+  Map, BarChart3, Building2, Radio, Shield, Zap, CalendarDays
 } from 'lucide-react';
 
 const navItems = [
@@ -41,6 +41,7 @@ const navItems = [
       { label: 'Competitions', href: '/competitions', icon: Trophy },
       { label: 'Innovation Media', href: '/blog', icon: Radio },
       { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { label: 'Team Workspace', href: '/team', icon: CalendarDays },
       { label: 'Events', href: '/events', icon: Building2 },
     ],
   },
@@ -399,6 +400,15 @@ export default function Navbar() {
             {/* Auth Buttons */}
             {isAuthenticated ? (
               <div className="hidden lg:flex items-center gap-2">
+                {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
+                  <Link
+                    href="/team"
+                    className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                    title="Team Workspace"
+                  >
+                    <CalendarDays className="w-5 h-5" />
+                  </Link>
+                )}
                 <Link
                   href="/analytics"
                   className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"

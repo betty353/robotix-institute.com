@@ -56,6 +56,8 @@ model User {
   blogComments         BlogComment[]
   gameProjects         GameProject[]
   gameProjectLikes     GameProjectLike[]
+  teamChatMessages     TeamChatMessage[]
+  teamCalendarEvents   TeamCalendarEvent[]
   gamificationLogs     GamificationLog[]
   passwordResetTokens  PasswordResetToken[]
 
@@ -797,4 +799,34 @@ model GameProjectLike {
 
   @@unique([userId, gameProjectId])
   @@index([gameProjectId])
+}
+
+model TeamChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model TeamCalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime
+  endsAt      DateTime
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([startsAt])
+  @@index([createdById])
 }
