@@ -70,6 +70,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(createErrorResponse('A user already exists with this email'), { status: 409 });
     }
 
+    const now = new Date();
+    const previousPending = await prisma.teamInvite.updateMany({
+      where: {
+        email,
+        acceptedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { expiresAt: now },
+    });
+
     const token = crypto.randomBytes(32).toString('base64url');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 2);
     const inviteUrl = `${getAppOrigin()}/invite/${encodeURIComponent(token)}`;
@@ -114,8 +124,8 @@ export async function POST(request: NextRequest) {
       createApiResponse(
         { invite, inviteUrl, emailSent },
         emailSent
-          ? 'Invitation sent. The invite link expires in 2 hours.'
-          : 'Invitation created. Email delivery is not configured, so copy the invite link. The link expires in 2 hours.'
+          ? `${previousPending.count > 0 ? 'Previous pending invite expired. ' : ''}Invitation sent. The invite link expires in 2 hours.`
+          : `${previousPending.count > 0 ? 'Previous pending invite expired. ' : ''}Invitation created. Email delivery is not configured, so copy the invite link. The link expires in 2 hours.`
       ),
       { status: 201 }
     );

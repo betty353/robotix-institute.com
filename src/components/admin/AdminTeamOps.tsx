@@ -175,7 +175,7 @@ export default function AdminTeamOps() {
           </Badge>
           <h2 className="font-heading text-2xl font-semibold">Invite staff by email</h2>
           <p className="mt-2 text-sm leading-6 text-white/60">
-            Create secure invite links for instructors, accounts personnel, and admins.
+            Create secure invite links for instructors and accounts personnel.
           </p>
           <form onSubmit={createInvite} className="mt-5 space-y-4">
             <div className="grid gap-4 md:grid-cols-2">

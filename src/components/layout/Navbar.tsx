@@ -74,6 +74,7 @@ export default function Navbar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const logoHref = user?.role === 'ADMIN' ? '/admin' : '/';
 
   // Fetch notifications.
   // Poll every 60s while the tab is visible. Pause polling when hidden to
@@ -203,7 +204,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href={logoHref} className="flex items-center gap-2 group">
             <Image
               src="/images/logo-color.png"
               alt="Robotix Institute"
