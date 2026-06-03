@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Badge, Button, GlassCard, Input, Select, Textarea } from '@/components/ui';
 import { useAuthStore } from '@/store';
-import { CalendarDays, Copy, MailPlus, MapPin, UserPlus } from 'lucide-react';
+import { CalendarDays, Copy, MailPlus, MapPin, Trash2, UserPlus } from 'lucide-react';
 
 type StaffMember = {
   id: string;
@@ -159,6 +159,22 @@ export default function AdminTeamOps() {
     }
   };
 
+  const deleteInvite = async (inviteId: string) => {
+    if (!token) return;
+    setError(null);
+    try {
+      const response = await fetch(`/api/team/invites?id=${encodeURIComponent(inviteId)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.message || 'Invite could not be removed.');
+      setInvites((current) => current.filter((invite) => invite.id !== inviteId));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Invite could not be removed.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {error ? (
@@ -251,7 +267,19 @@ export default function AdminTeamOps() {
                     <div className="text-sm font-semibold text-white">{invite.firstName} {invite.lastName}</div>
                     <div className="text-xs text-white/50">{invite.email}</div>
                   </div>
-                  <Badge variant={invite.acceptedAt ? 'success' : 'primary'}>{invite.acceptedAt ? 'Accepted' : invite.role}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={invite.acceptedAt ? 'success' : 'primary'}>{invite.acceptedAt ? 'Accepted' : invite.role}</Badge>
+                    {!invite.acceptedAt ? (
+                      <button
+                        type="button"
+                        onClick={() => deleteInvite(invite.id)}
+                        className="rounded-lg border border-white/10 p-2 text-white/45 transition hover:border-red-300/30 hover:bg-red-400/10 hover:text-red-100"
+                        title="Remove pending invite"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ))}

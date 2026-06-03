@@ -134,3 +134,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(createErrorResponse('Internal server error'), { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = getUserFromRequest(request);
+    const denied = await requireRole(user, ['ADMIN']);
+    if (denied) return denied;
+
+    const id = request.nextUrl.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json(createErrorResponse('Invite id is required'), { status: 400 });
+    }
+
+    const invite = await prisma.teamInvite.findUnique({
+      where: { id },
+      select: { id: true, acceptedAt: true },
+    });
+
+    if (!invite) {
+      return NextResponse.json(createErrorResponse('Invite not found'), { status: 404 });
+    }
+
+    if (invite.acceptedAt) {
+      return NextResponse.json(createErrorResponse('Accepted invites are kept for audit history'), { status: 409 });
+    }
+
+    await prisma.teamInvite.delete({ where: { id } });
+
+    return NextResponse.json(createApiResponse({ id }, 'Invite removed'));
+  } catch (error) {
+    console.error('team invites DELETE error:', error);
+    return NextResponse.json(createErrorResponse('Internal server error'), { status: 500 });
+  }
+}
